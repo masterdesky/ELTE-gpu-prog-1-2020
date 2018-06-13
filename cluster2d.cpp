@@ -204,6 +204,7 @@ std::map<int, std::vector<std::string>> ClusterStep(std::map<int, std::vector<st
 {
     // Iterator for the map structure
     std::map<int, std::vector<std::string>>::iterator MapIterator;
+    std::map<int, std::vector<std::string>>::iterator MapIteratorTemp;
 
     // Iterator for the vector structure
     std::vector<std::string>::iterator StringVectorIterator;
@@ -215,15 +216,35 @@ std::map<int, std::vector<std::string>> ClusterStep(std::map<int, std::vector<st
         // Particulary in the MapIterator# group
         if(std::find(MapIterator->second.begin(), MapIterator->second.end(), ArrayTableElement1.first) != MapIterator->second.end())
         {
-            // If the second element is already inside the SAME group, then everything is all right, do nothing
-            if(std::find(MapIterator->second.begin(), MapIterator->second.end(), ArrayTableElement2.first) != MapIterator->second.end())
-            {}
-
-            // If the second element isn't in that group, then put it into there
-            else
+            int TempFirstElementsGroup = MapIterator->first;
+            for(MapIteratorTemp = ClusteredGroups.begin(); MapIteratorTemp != ClusteredGroups.end(); ++MapIteratorTemp)
             {
-                MapIterator->second.push_back(ArrayTableElement2.first);
-                break;
+                // If the second element is already inside the SAME group, then everything is all right, do nothing
+                if(std::find(MapIteratorTemp->second.begin(), MapIteratorTemp->second.end(), ArrayTableElement2.first) != MapIteratorTemp->second.end())
+                {
+                    if(MapIteratorTemp->first == MapIterator->first)
+                    {}
+
+                    else
+                    {
+                        if(MapIteratorTemp->first > MapIterator->first)
+                        {
+                            MapIterator->first.insert(MapIterator->first.end(), MapIteratorTemp->first.begin(), MapIteratorTemp->first.end());
+                        }
+
+                        else if(MapIteratorTemp->first < MapIterator->first)
+                        {
+                            
+                        }
+                    }
+                }
+
+                // If the second element isn't in that group, then put it into there
+                else
+                {
+                    MapIterator->second.push_back(ArrayTableElement2.first);
+                    break;
+                }
             }
         }
 
