@@ -8,40 +8,56 @@
 void TestFunction(std::map<int, std::vector<int>> TestMap)
 {
     std::map<int, std::vector<int>>::iterator MapIterator;
-    std::map<int, std::vector<int>>::iterator MapIteratorTemp;
+    std::vector<int>::iterator VectorIterator;
 
-    int Temp;
+    int TempStrorageForIndeces;
 
-    for(auto const& [key, val] : TestMap)
+    for(MapIterator = TestMap.begin(); MapIterator != TestMap.end(); ++MapIterator)
     {
-        if(key == 7)
+        if(MapIterator->first == 7)
         {
-            TestMap.erase(7);
-            Temp = 7;
+            TestMap.erase(MapIterator->first);
+            TempStrorageForIndeces = MapIterator->first;
         }
         std::cout << MapIterator->first << std::endl;
     }
 
-    for(auto const& [key, val] : TestMap)
+    for(MapIterator = TestMap.begin(); MapIterator != TestMap.end(); ++MapIterator)
     {
-        std::cout << key << std::endl;
+        int TempIndexFind = TempStrorageForIndeces + 1;
+        if(MapIterator->first == TempIndexFind)
+        {
+            TestMap[TempStrorageForIndeces] = TestMap[TempIndexFind];
+            TestMap.erase(TempIndexFind);
+            ++TempStrorageForIndeces;
+        }
+    }
+
+    for(MapIterator = TestMap.begin(); MapIterator != TestMap.end(); ++MapIterator)
+    {
+        std::cout << MapIterator->first << "{";
+        for(VectorIterator = MapIterator->second.begin(); VectorIterator != MapIterator->second.end(); ++VectorIterator)
+        {
+            std::cout << *VectorIterator << ",";
+        }
+        std::cout << "}" << std::endl;
     }
 }
 
 int main()
 {
     std::map<int, std::vector<int>> TestMap;
-    TestMap[1] = {1,2,3};
-    TestMap[2] = {1,2,3};
-    TestMap[3] = {1,2,3};
-    TestMap[4] = {1,2,3};
-    TestMap[5] = {1,2,3};
-    TestMap[6] = {1,2,3};
-    TestMap[7] = {1,2,3};
-    TestMap[8] = {1,2,3};
-    TestMap[9] = {1,2,3};
-    TestMap[10] = {1,2,3};
-    TestMap[11] = {1,2,3};
+    TestMap[1] = {1,1,1};
+    TestMap[2] = {2,2,2};
+    TestMap[3] = {3,3,3};
+    TestMap[4] = {4,4,4};
+    TestMap[5] = {5,5,5};
+    TestMap[6] = {6,6,6};
+    TestMap[7] = {7,7,7};
+    TestMap[8] = {8,8,8};
+    TestMap[9] = {9,9,9};
+    TestMap[10] = {10,10,10};
+    TestMap[11] = {11,11,11};
 
     TestFunction(TestMap);
 }

@@ -1,5 +1,6 @@
 #include <iostream>
 #include <sstream>
+#include <fstream>
 #include <vector>
 #include <utility>
 #include <map>
@@ -210,6 +211,10 @@ void PrintElements(std::vector<std::pair<std::string,double>> ArrayTable, int Ro
 // ArrayTableElement2: The second element, which is compared to the first one (CALLED SECOND ELEMENT)
 std::map<int, std::vector<std::string>> ClusterStep(std::map<int, std::vector<std::string>> ClusteredGroups, std::pair<std::string,double> ArrayTableElement1, std::pair<std::string,double> ArrayTableElement2, double dx)
 {
+    // Measure time
+    std::clock_t StartTime;
+    StartTime = std::clock();
+
     // Iterator for the map structure
     std::map<int, std::vector<std::string>>::iterator MapIterator;
     std::map<int, std::vector<std::string>>::iterator MapIteratorTemp;
@@ -220,83 +225,103 @@ std::map<int, std::vector<std::string>> ClusterStep(std::map<int, std::vector<st
     // Temporary storage for a specific index while iterating through the entries of a map
     int TempStrorageForIndeces = -1;
 
-    // Run through the vectors respect to them keys in the std::map structure
-    for(MapIterator = ClusteredGroups.begin(); MapIterator != ClusteredGroups.end(); ++MapIterator)
+    std::cout << "INFORMATIVE MESSAGE: Check is now executed between tile " << ArrayTableElement1.first << " and " << ArrayTableElement2.first << std::endl;
+
+    if(ClusteredGroups.size() == 0)
     {
-        // Activates if the first element is already inside one of the vectors in the std::map structure
-        // Particulary in the MapIterator# group
-        if(std::find(MapIterator->second.begin(), MapIterator->second.end(), ArrayTableElement1.first) != MapIterator->second.end())
+        // Increment the counter for the number of clusters to 1
+        NumberOfClusterGroups = 1;
+
+        // Make a temporary storage for the first two cluster element
+        std::vector<std::string> TempStorage = {ArrayTableElement1.first, ArrayTableElement2.first};
+
+        // Put them insode the std::map structure as first entries
+        ClusteredGroups[NumberOfClusterGroups] = TempStorage;
+
+        // Clear the temporary storage
+        TempStorage.clear();
+    }
+
+    else
+    {
+        // Run through the vectors respect to them keys in the std::map structure
+        for(MapIterator = ClusteredGroups.begin(); MapIterator != ClusteredGroups.end(); ++MapIterator)
         {
-            for(MapIteratorTemp = ClusteredGroups.begin(); MapIteratorTemp != ClusteredGroups.end(); ++MapIteratorTemp)
+            // Activates if the first element is already inside one of the vectors in the std::map structure
+            // Particulary in the MapIterator# group
+            if(std::find(MapIterator->second.begin(), MapIterator->second.end(), ArrayTableElement1.first) != MapIterator->second.end())
             {
-                // Check if the second element is inside any of the map's pairs
-                if(std::find(MapIteratorTemp->second.begin(), MapIteratorTemp->second.end(), ArrayTableElement2.first) != MapIteratorTemp->second.end())
+                for(MapIteratorTemp = ClusteredGroups.begin(); MapIteratorTemp != ClusteredGroups.end(); ++MapIteratorTemp)
                 {
-                    // If the second element is already inside the SAME group, then everything is all right, do nothing
-                    if(MapIteratorTemp->first == MapIterator->first)
+                    // Check if the second element is inside any of the map's pairs
+                    if(std::find(MapIteratorTemp->second.begin(), MapIteratorTemp->second.end(), ArrayTableElement2.first) != MapIteratorTemp->second.end())
                     {
-                        break;
+                        // If the second element is already inside the SAME group, then everything is all right, do nothing
+                        if(MapIteratorTemp->first == MapIterator->first)
+                        {
+                            break;
+                        }
+
+                        // If they aren't, then merge the two group, and refresh the 'ClusteredGroups' map's keys
+                        else
+                        {
+                            if(MapIteratorTemp->first > MapIterator->first)
+                            {
+                                MapIterator->second.insert(MapIterator->second.end(), MapIteratorTemp->second.begin(), MapIteratorTemp->second.end());
+                                TempStrorageForIndeces = MapIteratorTemp->first;
+                                ClusteredGroups.erase(MapIteratorTemp->first);
+                                break;
+                            }
+
+                            else if(MapIteratorTemp->first < MapIterator->first)
+                            {
+                                MapIteratorTemp->second.insert(MapIteratorTemp->second.end(), MapIterator->second.begin(), MapIterator->second.end());
+                                TempStrorageForIndeces = MapIterator->first;
+                                ClusteredGroups.erase(MapIterator->first);
+                                break;
+                            }
+                        }
                     }
 
-                    // If they aren't, then merge the two group, and refresh the 'ClusteredGroups' map's keys
+                    // If the second element isn't in that group, then put it into there
                     else
                     {
-                        if(MapIteratorTemp->first > MapIterator->first)
-                        {
-                            MapIterator->second.insert(MapIterator->second.end(), MapIteratorTemp->second.begin(), MapIteratorTemp->second.end());
-                            TempStrorageForIndeces = MapIteratorTemp->first;
-                            ClusteredGroups.erase(MapIteratorTemp->first);
-                            break;
-                        }
-
-                        else if(MapIteratorTemp->first < MapIterator->first)
-                        {
-                            MapIteratorTemp->second.insert(MapIteratorTemp->second.end(), MapIterator->second.begin(), MapIterator->second.end());
-                            TempStrorageForIndeces = MapIterator->first;
-                            ClusteredGroups.erase(MapIterator->first);
-                            break;
-                        }
+                        MapIterator->second.push_back(ArrayTableElement2.first);
+                        break;
                     }
                 }
 
-                // If the second element isn't in that group, then put it into there
-                else
+                if(TempStrorageForIndeces != -1)
                 {
-                    MapIterator->second.push_back(ArrayTableElement2.first);
                     break;
                 }
             }
 
-            if(TempStrorageForIndeces != -1)
-            {
-                break;
-            }
-        }
-
-        // What if the first element isn't inside a group?
-        else
-        {
-            // Check if the second element is already contained by a group
-            // If it is, then insert the first element into that too
-            if(std::find(MapIterator->second.begin(), MapIterator->second.end(), ArrayTableElement2.first) != MapIterator->second.end())
-            {
-                MapIterator->second.push_back(ArrayTableElement1.first);
-                break;
-            }
-
-            // If none of them is inside a group, then create a new group
+            // What if the first element isn't inside a group?
             else
             {
-                // Increment the counter for the number of the cluster groups
-                int *TempForNumberOfCG;
-                TempForNumberOfCG = &NumberOfClusterGroups;
-                ++*TempForNumberOfCG;
+                // Check if the second element is already contained by a group
+                // If it is, then insert the first element into that too
+                if(std::find(MapIterator->second.begin(), MapIterator->second.end(), ArrayTableElement2.first) != MapIterator->second.end())
+                {
+                    MapIterator->second.push_back(ArrayTableElement1.first);
+                    break;
+                }
 
-                std::vector<std::string> TempStorage = {ArrayTableElement1.first, ArrayTableElement2.first};
+                // If none of them is inside a group, then create a new group
+                else
+                {
+                    // Increment the counter for the number of the cluster groups
+                    int *TempForNumberOfCG;
+                    TempForNumberOfCG = &NumberOfClusterGroups;
+                    ++*TempForNumberOfCG;
 
-                ClusteredGroups.insert(std::pair<int, std::vector<std::string>>(NumberOfClusterGroups, TempStorage));
+                    std::vector<std::string> TempStorage = {ArrayTableElement1.first, ArrayTableElement2.first};
 
-                TempStorage.clear();
+                    ClusteredGroups[NumberOfClusterGroups] = TempStorage;
+
+                    TempStorage.clear();
+                }
             }
         }
     }
@@ -308,14 +333,15 @@ std::map<int, std::vector<std::string>> ClusterStep(std::map<int, std::vector<st
             int TempIndexFind = TempStrorageForIndeces + 1;
             if(MapIterator->first == TempIndexFind)
             {
-                auto NodeHandler = ClusteredGroups.extract(TempIndexFind);
-                NodeHandler.key() = TempStrorageForIndeces;
-                ClusteredGroups.insert(std::move(NodeHandler));
+                ClusteredGroups[TempStrorageForIndeces] = ClusteredGroups[TempIndexFind];
+                ClusteredGroups.erase(TempIndexFind);
                 ++TempStrorageForIndeces;
             }
         }
         TempStrorageForIndeces = -1;
     }
+
+    std::cout << "Elapsed time: " << (std::clock() - StartTime) / (double)(CLOCKS_PER_SEC / 1000) << " ms\n" << std::endl;
 
     return(ClusteredGroups);
 }
@@ -662,6 +688,38 @@ std::map<int, std::vector<std::string>> ClusteringBruteForce(std::vector<std::pa
     return ClusteredGroups;
 }
 
+
+// ####### 3. WRITE DATA INTO FILE #######
+
+void WriteToFile(std::map<int, std::vector<std::string>> ClusteredGroups)
+{
+    // Iterator for the map structure
+    std::map<int, std::vector<std::string>>::iterator MapIterator;
+
+    // Iterator for the vector structure
+    std::vector<std::string>::iterator StringVectorIterator;
+
+    // Make a textfile to store output data
+    std::ofstream OutputFile;
+    OutputFile.open("ClusteredData.txt");
+
+    // Write a header for the output file
+    OutputFile << "Indeces of  |  Elements of\nclusters    |  clusters" << std::endl;
+    // Write the clusters' data into the file
+    for(MapIterator = ClusteredGroups.begin(); MapIterator != ClusteredGroups.end(); ++MapIterator)
+    {
+        OutputFile << "Cluster #" << MapIterator->first << ":     {";
+        for(StringVectorIterator = MapIterator->second.begin(); StringVectorIterator != MapIterator->second.end(); ++MapIterator)
+        {
+            OutputFile << *StringVectorIterator << ", ";
+        }
+        OutputFile << "}" << std::endl;
+    }
+
+    OutputFile.close();
+
+}
+
 int main()
 {
     std::cout << ">>>    CLUSTERING WITH C++ PARALLEL PROGRAMMING    <<<" << std::endl;
@@ -679,9 +737,15 @@ int main()
     std::cout << "INFORMATIVE MESSAGE: The data table has been created!\n" << std::endl;
 
     // Run test
-    //PrintElements(ArrayTable, Rows, Columns);
+    PrintElements(ArrayTable, Rows, Columns);
 
     // Cluster with bruteforce method
     auto ClusteredGroups = ClusteringBruteForce(ArrayTable, Rows, Columns, dx);
+    std::cout << "INFORMATIVE MESSAGE: Clustering steps finished!\n" << std::endl;
 
+    // Write data to output file
+    WriteToFile(ClusteredGroups);
+    std::cout << "INFORMATIVE MESSAGE: Output file created!\n" << std::endl;
+
+    std::cout << "INFORMATIVE MESSAGE: Clustering is completed!\n" << std::endl;
 }

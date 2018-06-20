@@ -1,17 +1,11 @@
-#Specify the minimum version for CMake
+cmake_minimum_required(VERSION 3.0.0)
+project(cluster2d VERSION 0.1.0)
 
-cmake_minimum_required(VERSION 2.8.12)
+include(CTest)
+enable_testing()
 
-# Project's name
+add_executable(cluster2d cluster2d.cpp)
 
-project(cluster2d)
-# Set the output folder where your program will be created
-set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/build)
-set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
-set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
-
-# The following folder will be included
-include_directories("${PROJECT_SOURCE_DIR}")
-
-# Executable
-add_executable(cluster2d ${PROJECT_SOURCE_DIR}/cluster2d.cpp)
+set(CPACK_PROJECT_NAME ${PROJECT_NAME})
+set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
+include(CPack)
