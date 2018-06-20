@@ -1,3 +1,39 @@
 ﻿  cluster2d.cpp
-MSVCRTD.lib(exe_winmain.obj) : error LNK2019: unresolved external symbol _WinMain@16 referenced in function "int __cdecl invoke_main(void)" (?invoke_main@@YAHXZ)
-C:\Users\Lordpb\Documents\GitHub\Cpp-clustering-paralelled-on-GPU\Debug\Cpp clustering paralelled on GPU.exe : fatal error LNK1120: 1 unresolved externals
+c:\users\lordpb\documents\github\cpp-clustering-paralelled-on-gpu\cluster2d.cpp(224): error C2429: language feature 'structured bindings' requires compiler flag '/std:c++17'
+c:\users\lordpb\documents\github\cpp-clustering-paralelled-on-gpu\cluster2d.cpp(306): error C2429: language feature 'structured bindings' requires compiler flag '/std:c++17'
+c:\users\lordpb\documents\github\cpp-clustering-paralelled-on-gpu\cluster2d.cpp(309): error C2065: 'MapActualKey': undeclared identifier
+c:\users\lordpb\documents\github\cpp-clustering-paralelled-on-gpu\cluster2d.cpp(311): error C2039: 'extract': is not a member of 'std::map<int,std::vector<std::string,std::allocator<_Ty>>,std::less<int>,std::allocator<std::pair<const _Kty,std::vector<_Ty,std::allocator<_Ty>>>>>'
+          with
+          [
+              _Ty=std::string,
+              _Kty=int
+          ]
+  c:\users\lordpb\documents\github\cpp-clustering-paralelled-on-gpu\cluster2d.cpp(211): note: see declaration of 'std::map<int,std::vector<std::string,std::allocator<_Ty>>,std::less<int>,std::allocator<std::pair<const _Kty,std::vector<_Ty,std::allocator<_Ty>>>>>'
+          with
+          [
+              _Ty=std::string,
+              _Kty=int
+          ]
+c:\users\lordpb\documents\github\cpp-clustering-paralelled-on-gpu\cluster2d.cpp(312): error C3536: 'NodeHandler': cannot be used before it is initialized
+c:\users\lordpb\documents\github\cpp-clustering-paralelled-on-gpu\cluster2d.cpp(312): error C2228: left of '.key' must have class/struct/union
+  c:\users\lordpb\documents\github\cpp-clustering-paralelled-on-gpu\cluster2d.cpp(312): note: type is 'int'
+c:\users\lordpb\documents\github\cpp-clustering-paralelled-on-gpu\cluster2d.cpp(313): error C2664: 'std::_Tree_iterator<std::_Tree_val<std::_Tree_simple_types<_Ty>>> std::_Tree<std::_Tmap_traits<_Kty,std::vector<std::string,std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char>>>>,_Pr,_Alloc,false>>::insert(std::_Tree_const_iterator<std::_Tree_val<std::_Tree_simple_types<_Ty>>>,const std::pair<const _Kty,std::vector<std::string,std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char>>>>> &)': cannot convert argument 1 from 'int' to 'std::pair<const _Kty,_Ty> &&'
+          with
+          [
+              _Ty=std::pair<const int,std::vector<std::string,std::allocator<std::string>>>,
+              _Kty=int,
+              _Pr=std::less<int>,
+              _Alloc=std::allocator<std::pair<const int,std::vector<std::string,std::allocator<std::string>>>>
+          ]
+          and
+          [
+              _Kty=int,
+              _Ty=std::vector<std::string,std::allocator<std::string>>
+          ]
+  c:\users\lordpb\documents\github\cpp-clustering-paralelled-on-gpu\cluster2d.cpp(313): note: Reason: cannot convert from 'int' to 'std::pair<const _Kty,_Ty>'
+          with
+          [
+              _Kty=int,
+              _Ty=std::vector<std::string,std::allocator<std::string>>
+          ]
+  c:\users\lordpb\documents\github\cpp-clustering-paralelled-on-gpu\cluster2d.cpp(313): note: No constructor could take the source type, or constructor overload resolution was ambiguous

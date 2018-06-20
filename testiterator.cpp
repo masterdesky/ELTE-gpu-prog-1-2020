@@ -22,9 +22,9 @@ void TestFunction(std::map<int, std::vector<int>> TestMap)
         std::cout << MapIterator->first << std::endl;
     }
 
-    for(MapIterator = TestMap[6]; MapIterator != TestMap.end(); ++MapIterator)
+    for(auto const& [key, val] : TestMap)
     {
-        std::cout << MapIterator->first << std::endl;
+        std::cout << key << std::endl;
     }
 }
 

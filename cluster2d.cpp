@@ -217,6 +217,9 @@ std::map<int, std::vector<std::string>> ClusterStep(std::map<int, std::vector<st
     // Iterator for the vector structure
     std::vector<std::string>::iterator StringVectorIterator;
 
+    // Temporary storage for a specific index while iterating through the entries of a map
+    int TempStrorageForIndeces = -1;
+
     // Run through the vectors respect to them keys in the std::map structure
     for(MapIterator = ClusteredGroups.begin(); MapIterator != ClusteredGroups.end(); ++MapIterator)
     {
@@ -229,7 +232,6 @@ std::map<int, std::vector<std::string>> ClusterStep(std::map<int, std::vector<st
                 // Check if the second element is inside any of the map's pairs
                 if(std::find(MapIteratorTemp->second.begin(), MapIteratorTemp->second.end(), ArrayTableElement2.first) != MapIteratorTemp->second.end())
                 {
-                    int TemporaryStrorageForIndeces;
                     // If the second element is already inside the SAME group, then everything is all right, do nothing
                     if(MapIteratorTemp->first == MapIterator->first)
                     {
@@ -242,7 +244,7 @@ std::map<int, std::vector<std::string>> ClusterStep(std::map<int, std::vector<st
                         if(MapIteratorTemp->first > MapIterator->first)
                         {
                             MapIterator->second.insert(MapIterator->second.end(), MapIteratorTemp->second.begin(), MapIteratorTemp->second.end());
-                            TemporaryStrorageForIndeces = MapIteratorTemp->first;
+                            TempStrorageForIndeces = MapIteratorTemp->first;
                             ClusteredGroups.erase(MapIteratorTemp->first);
                             break;
                         }
@@ -250,7 +252,7 @@ std::map<int, std::vector<std::string>> ClusterStep(std::map<int, std::vector<st
                         else if(MapIteratorTemp->first < MapIterator->first)
                         {
                             MapIteratorTemp->second.insert(MapIteratorTemp->second.end(), MapIterator->second.begin(), MapIterator->second.end());
-                            TemporaryStrorageForIndeces = MapIterator->first;
+                            TempStrorageForIndeces = MapIterator->first;
                             ClusteredGroups.erase(MapIterator->first);
                             break;
                         }
@@ -263,6 +265,11 @@ std::map<int, std::vector<std::string>> ClusterStep(std::map<int, std::vector<st
                     MapIterator->second.push_back(ArrayTableElement2.first);
                     break;
                 }
+            }
+
+            if(TempStrorageForIndeces != -1)
+            {
+                break;
             }
         }
 
@@ -292,6 +299,22 @@ std::map<int, std::vector<std::string>> ClusterStep(std::map<int, std::vector<st
                 TempStorage.clear();
             }
         }
+    }
+
+    if(TempStrorageForIndeces != -1)
+    {
+        for(MapIterator = ClusteredGroups.begin(); MapIterator != ClusteredGroups.end(); ++MapIterator)
+        {
+            int TempIndexFind = TempStrorageForIndeces + 1;
+            if(MapIterator->first == TempIndexFind)
+            {
+                auto NodeHandler = ClusteredGroups.extract(TempIndexFind);
+                NodeHandler.key() = TempStrorageForIndeces;
+                ClusteredGroups.insert(std::move(NodeHandler));
+                ++TempStrorageForIndeces;
+            }
+        }
+        TempStrorageForIndeces = -1;
     }
 
     return(ClusteredGroups);
