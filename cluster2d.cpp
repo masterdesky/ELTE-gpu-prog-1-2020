@@ -8,11 +8,14 @@
 #include <thread>
 #include <ctime>
 
+// ####### 0. GLOBAL PARAMETERS #######
+
 // A global string for indicating current version of program
 std::string VersionNumber = "0.3";
 
 // Counter for the number of cluster group = 0;
 int NumberOfClusterGroups = 0;
+
 
 // ####### 1. INITIALIZING FUNCTIONS #######
 
@@ -158,7 +161,7 @@ std::vector<std::pair<std::string,double>> Generate2dArray(int Rows, int Columns
             CurrentElement.str(std::string());
 
             // Make a string, which indicates the actual element with its position in the table
-            // Like this: "#ofRows - #ofColumns"
+            // A string will look like this: "#ofRows - #ofColumns"
             CurrentElement << i << "-" << j;
             std::string CurrentElementString = CurrentElement.str();
 
@@ -195,11 +198,16 @@ void PrintElements(std::vector<std::pair<std::string,double>> ArrayTable, int Ro
 
 
 // ####### 2. CLUSTERING #######
+// ###    2/1. BRUTEFORCE    ###
 
-// Auxiliary function
-// The actual clustering check between two neighbouring tile after the two of them is inside the same radii criterium
-// ArrayTableElement1: To which we compare the other element (CALLED FIRST ELEMENT)
-// ArrayTableElement2: The other element, which is compared to the first one (CALLED SECOND ELEMENT)
+// --- Auxiliary function ---
+// - Does the following:
+// 1. Activates if both of the neighbouring tiles are inside the same radii criterium
+// 2. The function then classify them to the proper cluster (group)
+//
+// - Legends:
+// ArrayTableElement1: The first element, to which we compare the other element (CALLED FIRST ELEMENT)
+// ArrayTableElement2: The second element, which is compared to the first one (CALLED SECOND ELEMENT)
 std::map<int, std::vector<std::string>> ClusterStep(std::map<int, std::vector<std::string>> ClusteredGroups, std::pair<std::string,double> ArrayTableElement1, std::pair<std::string,double> ArrayTableElement2, double dx)
 {
     // Iterator for the map structure
@@ -216,25 +224,35 @@ std::map<int, std::vector<std::string>> ClusterStep(std::map<int, std::vector<st
         // Particulary in the MapIterator# group
         if(std::find(MapIterator->second.begin(), MapIterator->second.end(), ArrayTableElement1.first) != MapIterator->second.end())
         {
-            int TempFirstElementsGroup = MapIterator->first;
             for(MapIteratorTemp = ClusteredGroups.begin(); MapIteratorTemp != ClusteredGroups.end(); ++MapIteratorTemp)
             {
-                // If the second element is already inside the SAME group, then everything is all right, do nothing
+                // Check if the second element is inside any of the map's pairs
                 if(std::find(MapIteratorTemp->second.begin(), MapIteratorTemp->second.end(), ArrayTableElement2.first) != MapIteratorTemp->second.end())
                 {
+                    int TemporaryStrorageForIndeces;
+                    // If the second element is already inside the SAME group, then everything is all right, do nothing
                     if(MapIteratorTemp->first == MapIterator->first)
-                    {}
+                    {
+                        break;
+                    }
 
+                    // If they aren't, then merge the two group, and refresh the 'ClusteredGroups' map's keys
                     else
                     {
                         if(MapIteratorTemp->first > MapIterator->first)
                         {
-                            MapIterator->first.insert(MapIterator->first.end(), MapIteratorTemp->first.begin(), MapIteratorTemp->first.end());
+                            MapIterator->second.insert(MapIterator->second.end(), MapIteratorTemp->second.begin(), MapIteratorTemp->second.end());
+                            TemporaryStrorageForIndeces = MapIteratorTemp->first;
+                            ClusteredGroups.erase(MapIteratorTemp->first);
+                            break;
                         }
 
                         else if(MapIteratorTemp->first < MapIterator->first)
                         {
-                            
+                            MapIteratorTemp->second.insert(MapIteratorTemp->second.end(), MapIterator->second.begin(), MapIterator->second.end());
+                            TemporaryStrorageForIndeces = MapIterator->first;
+                            ClusteredGroups.erase(MapIterator->first);
+                            break;
                         }
                     }
                 }
@@ -311,8 +329,12 @@ std::map<int, std::vector<std::string>> BasicClusterFrame(std::map<int, std::vec
 
 }
 
-// Functions for the elements in the neighbouring tiles of the outermost ones 
-// Upper-Right-Bottom-Left bars included
+
+// Function for the uppermost bar of tiles
+// O.X.X.X.X.X.O
+// O.O.O.O.O.O.O
+// O.O.O.O.O.O.O
+// O.O.O.O.O.O.O
 std::map<int, std::vector<std::string>> UppermostBarClusterFrame(std::map<int, std::vector<std::string>> ClusteredGroups, std::vector<std::pair<std::string,double>> ArrayTable, int Rows, int Columns, int i, int j, double dx)
 {
     std::pair<std::string,double> ArrayTableElement1;
@@ -343,6 +365,13 @@ std::map<int, std::vector<std::string>> UppermostBarClusterFrame(std::map<int, s
     return(ClusteredGroups);
 }
 
+// Function for the leftmost bar of tiles
+// O.O.O.O
+// X.O.O.O
+// X.O.O.O
+// X.O.O.O
+// X.O.O.O
+// O.O.O.O
 std::map<int, std::vector<std::string>> LeftmostBarClusterFrame(std::map<int, std::vector<std::string>> ClusteredGroups, std::vector<std::pair<std::string,double>> ArrayTable, int Rows, int Columns, int i, int j, double dx)
 {
     std::pair<std::string,double> ArrayTableElement1;
@@ -373,6 +402,13 @@ std::map<int, std::vector<std::string>> LeftmostBarClusterFrame(std::map<int, st
     return(ClusteredGroups);
 }
 
+// Function for the rightmost bar of tiles
+// O.O.O.O
+// O.O.O.X
+// O.O.O.X
+// O.O.O.X
+// O.O.O.X
+// O.O.O.O
 std::map<int, std::vector<std::string>> RightmostBarClusterFrame(std::map<int, std::vector<std::string>> ClusteredGroups, std::vector<std::pair<std::string,double>> ArrayTable, int Rows, int Columns, int i, int j, double dx)
 {
     std::pair<std::string,double> ArrayTableElement1;
@@ -392,6 +428,11 @@ std::map<int, std::vector<std::string>> RightmostBarClusterFrame(std::map<int, s
     return(ClusteredGroups);
 }
 
+// Function for the bottommost bar of tiles
+// O.O.O.O.O.O.O
+// O.O.O.O.O.O.O
+// O.O.O.O.O.O.O
+// O.X.X.X.X.X.O
 std::map<int, std::vector<std::string>> BottommostBarClusterFrame(std::map<int, std::vector<std::string>> ClusteredGroups, std::vector<std::pair<std::string,double>> ArrayTable, int Rows, int Columns, int i, int j, double dx)
 {
     std::pair<std::string,double> ArrayTableElement1;
@@ -428,10 +469,12 @@ std::map<int, std::vector<std::string>> ClusteringBruteForce(std::vector<std::pa
     {
         for(int j = 1; j < Columns - 1; j++)
         {
+            // Basic step in the clustering, needed for every step
+            ClusteredGroups = BasicClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
+
             // UPPER LEFT corner
             if(i == 1 && j == 1)
             {
-                ClusteredGroups = BasicClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
                 ClusteredGroups = UppermostBarClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
                 ClusteredGroups = LeftmostBarClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
 
@@ -456,13 +499,11 @@ std::map<int, std::vector<std::string>> ClusteringBruteForce(std::vector<std::pa
                     ArrayTableElement2 = ArrayTable[(i - 1) * Columns + (j - 1)];
                     ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2, dx);
                 }
-
             }
 
             // UPPER RIGHT corner
             else if(i == 1 && j == Columns - 2)
             {
-                ClusteredGroups = BasicClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
                 ClusteredGroups = RightmostBarClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
                 
                 // Activates if the element in the UPPER RIGHT corner (here 1-(Cols)) is in the radii criterium compared to the (i-1)j# (here 1-(Cols - 1)) element
@@ -502,7 +543,6 @@ std::map<int, std::vector<std::string>> ClusteringBruteForce(std::vector<std::pa
             // BOTTOM LEFT corner
             else if(i == Rows - 2 && j == 1)
             {
-                ClusteredGroups = BasicClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
                 ClusteredGroups = BottommostBarClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
                 
                 // Activates if the element in the BOTTOM LEFT corner (here (Rows)-1) is in the radii criterium compared to the (i+1)j# (here (Rows)-2) element
@@ -542,7 +582,6 @@ std::map<int, std::vector<std::string>> ClusteringBruteForce(std::vector<std::pa
             // BOTTOM RIGHT corner
             else if(i == Rows - 2 && j == Columns - 2)
             {
-                ClusteredGroups = BasicClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
                 
                 // Activates if the element in the BOTTOM RIGHT corner (here Rows-Columns) is in the radii criterium compared to the (i+1)j# (here (Rows - 1)-(Columns - 2)) element
                 //  O.O.O
@@ -570,36 +609,30 @@ std::map<int, std::vector<std::string>> ClusteringBruteForce(std::vector<std::pa
             // Uppermost bar of tiles
             else if(i == 1 && j != 1 && j != Columns - 2)
             {
-                ClusteredGroups = BasicClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
                 ClusteredGroups = UppermostBarClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
             }
 
             // Bottommost bar of tiles
             else if(i == Rows - 2 && j != 1 && j != Columns - 2)
             {
-                ClusteredGroups = BasicClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
                 ClusteredGroups = BottommostBarClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
             }
 
             // Leftmost bar of tiles
             else if(i != 1 && i != Rows - 2 && j == 1)
             {
-                ClusteredGroups = BasicClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
                 ClusteredGroups = LeftmostBarClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
             }
 
             // Rightmost bar of tiles
             else if(i != 1 && i != Rows - 2 && j == Columns - 2)
             {
-                ClusteredGroups = BasicClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
                 ClusteredGroups = RightmostBarClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
             }
 
             // Other tiles
             else
-            {
-                ClusteredGroups = BasicClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
-            }
+            {} // Only the basic move needed
         }
     }
 
@@ -624,5 +657,8 @@ int main()
 
     // Run test
     //PrintElements(ArrayTable, Rows, Columns);
+
+    // Cluster with bruteforce method
+    auto ClusteredGroups = ClusteringBruteForce(ArrayTable, Rows, Columns, dx);
 
 }
