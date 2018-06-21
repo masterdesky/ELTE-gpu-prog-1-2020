@@ -12,7 +12,7 @@
 // ####### 0. GLOBAL PARAMETERS #######
 
 // A global string for indicating current version of program
-std::string VersionNumber = "0.3";
+std::string VersionNumber = "1.0";
 
 // Counter for the number of cluster group = 0;
 int NumberOfClusterGroups = 0;
@@ -36,7 +36,7 @@ std::tuple<int, int, double, double> Initialization()
     while(1)
     {
         std::cout << ">> Please enter the number of Rows of the 2D data table!" << std::endl;
-        std::cout << ">> Number of Rows: ";
+        std::cout << ">> Number of Rows (SHOULD BE AT LEAST 5): ";
         std::cin >> Rows;
         if(int(Rows) != Rows)
         {
@@ -52,7 +52,7 @@ std::tuple<int, int, double, double> Initialization()
     while(1)
     {
         std::cout << ">> Please enter the number of Columns of the 2D data table!" << std::endl;
-        std::cout << ">> Number of Columns: ";
+        std::cout << ">> Number of Columns (SHOULD BE AT LEAST 5): ";
         std::cin >> Columns;
         if(int(Columns) != Columns)
         {
@@ -209,21 +209,27 @@ void PrintElements(std::vector<std::pair<std::string,double>> ArrayTable, int Ro
 // - Legends:
 // ArrayTableElement1: The first element, to which we compare the other element (CALLED FIRST ELEMENT)
 // ArrayTableElement2: The second element, which is compared to the first one (CALLED SECOND ELEMENT)
-std::map<int, std::vector<std::string>> ClusterStep(std::map<int, std::vector<std::string>> ClusteredGroups, std::pair<std::string,double> ArrayTableElement1, std::pair<std::string,double> ArrayTableElement2, double dx)
+std::map<int, std::vector<std::string>> ClusterStep(std::map<int, std::vector<std::string>> ClusteredGroups, std::pair<std::string,double> ArrayTableElement1, std::pair<std::string,double> ArrayTableElement2)
 {
     // Measure time
     std::clock_t StartTime;
     StartTime = std::clock();
 
     // Iterator for the map structure
-    std::map<int, std::vector<std::string>>::iterator MapIterator;
-    std::map<int, std::vector<std::string>>::iterator MapIteratorTemp;
+    std::map<int, std::vector<std::string>>::iterator MapIteratorMain;
+    std::map<int, std::vector<std::string>>::iterator MapIteratorSub1;
+    std::map<int, std::vector<std::string>>::iterator MapIteratorSub2;
 
     // Iterator for the vector structure
     std::vector<std::string>::iterator StringVectorIterator;
 
-    // Temporary storage for a specific index while iterating through the entries of a map
-    int TempStrorageForIndeces = -1;
+    // Temporary storages for specific indeces while iterating through the entries of a map
+    int TempStrorageForErase = -1;
+    int TempStrorageForSearch;
+
+    // Bool indicator for various purpose
+    int IndicatorMain = 0;
+    int Indicator = 0;
 
     std::cout << "INFORMATIVE MESSAGE: Check is now executed between tile " << ArrayTableElement1.first << " and " << ArrayTableElement2.first << std::endl;
 
@@ -245,100 +251,112 @@ std::map<int, std::vector<std::string>> ClusterStep(std::map<int, std::vector<st
     else
     {
         // Run through the vectors respect to them keys in the std::map structure
-        for(MapIterator = ClusteredGroups.begin(); MapIterator != ClusteredGroups.end(); ++MapIterator)
+        for(MapIteratorMain = ClusteredGroups.begin(); MapIteratorMain != ClusteredGroups.end(); ++MapIteratorMain)
         {
             // Activates if the first element is already inside one of the vectors in the std::map structure
             // Particulary in the MapIterator# group
-            if(std::find(MapIterator->second.begin(), MapIterator->second.end(), ArrayTableElement1.first) != MapIterator->second.end())
+            if(std::find(MapIteratorMain->second.begin(), MapIteratorMain->second.end(), ArrayTableElement1.first) != MapIteratorMain->second.end())
             {
-                for(MapIteratorTemp = ClusteredGroups.begin(); MapIteratorTemp != ClusteredGroups.end(); ++MapIteratorTemp)
+                // Indicates if first element is found
+                IndicatorMain = 1;
+
+                for(MapIteratorSub1 = ClusteredGroups.begin(); MapIteratorSub1 != ClusteredGroups.end(); ++MapIteratorSub1)
                 {
-                    // Check if the second element is inside any of the map's pairs
-                    if(std::find(MapIteratorTemp->second.begin(), MapIteratorTemp->second.end(), ArrayTableElement2.first) != MapIteratorTemp->second.end())
+                    // Check if the second element is inside any of the std::map's entries
+                    // Indicator indicates if second element is found
+                    if(std::find(MapIteratorSub1->second.begin(), MapIteratorSub1->second.end(), ArrayTableElement2.first) != MapIteratorSub1->second.end())
                     {
                         // If the second element is already inside the SAME group, then everything is all right, do nothing
-                        if(MapIteratorTemp->first == MapIterator->first)
+                        if(MapIteratorSub1->first == MapIteratorMain->first)
                         {
+                            Indicator = 1;
                             break;
                         }
 
                         // If they aren't, then merge the two group, and refresh the 'ClusteredGroups' map's keys
                         else
                         {
-                            if(MapIteratorTemp->first > MapIterator->first)
+                            if(MapIteratorSub1->first > MapIteratorMain->first)
                             {
-                                MapIterator->second.insert(MapIterator->second.end(), MapIteratorTemp->second.begin(), MapIteratorTemp->second.end());
-                                TempStrorageForIndeces = MapIteratorTemp->first;
-                                ClusteredGroups.erase(MapIteratorTemp->first);
+                                ClusteredGroups[MapIteratorMain->first].insert(ClusteredGroups[MapIteratorMain->first].end(), ClusteredGroups[MapIteratorSub1->first].begin(), ClusteredGroups[MapIteratorSub1->first].end());
+                                TempStrorageForErase = MapIteratorSub1->first;
+                                ClusteredGroups.erase(MapIteratorSub1->first);
+                                Indicator = 1;
                                 break;
                             }
 
-                            else if(MapIteratorTemp->first < MapIterator->first)
+                            else if(MapIteratorSub1->first < MapIteratorMain->first)
                             {
-                                MapIteratorTemp->second.insert(MapIteratorTemp->second.end(), MapIterator->second.begin(), MapIterator->second.end());
-                                TempStrorageForIndeces = MapIterator->first;
-                                ClusteredGroups.erase(MapIterator->first);
+                                ClusteredGroups[MapIteratorSub1->first].insert(ClusteredGroups[MapIteratorSub1->first].end(), ClusteredGroups[MapIteratorMain->first].begin(), ClusteredGroups[MapIteratorMain->first].end());
+                                TempStrorageForErase = MapIteratorMain->first;
+                                ClusteredGroups.erase(MapIteratorMain->first);
+                                Indicator = 1;
                                 break;
                             }
                         }
                     }
-
-                    // If the second element isn't in that group, then put it into there
-                    else
-                    {
-                        MapIterator->second.push_back(ArrayTableElement2.first);
-                        break;
-                    }
                 }
 
-                if(TempStrorageForIndeces != -1)
+                // If the second element isn't in any group, then put it into there, where the first one is
+                if(Indicator == 0)
                 {
+                    ClusteredGroups[MapIteratorMain->first].push_back(ArrayTableElement2.first);
+                    break;
+                }
+
+                else
+                {
+                    Indicator = 0;
+                    break;
+                }
+            }
+        }
+
+        // What if the first element isn't inside a group?
+        if(IndicatorMain == 0)
+        {
+            // Check if the second element is already contained by a group
+            for(MapIteratorSub2 = ClusteredGroups.begin(); MapIteratorSub2 != ClusteredGroups.end(); ++MapIteratorSub2)
+            {
+                // If it is, then insert the first element into that too
+                if(std::find(MapIteratorSub2->second.begin(), MapIteratorSub2->second.end(), ArrayTableElement2.first) != MapIteratorSub2->second.end())
+                {
+                    ClusteredGroups[MapIteratorSub2->first].push_back(ArrayTableElement1.first);
+                    Indicator = 1;
                     break;
                 }
             }
 
-            // What if the first element isn't inside a group?
-            else
+            // If none of them is inside a group, then create a new group
+            if(Indicator == 0)
             {
-                // Check if the second element is already contained by a group
-                // If it is, then insert the first element into that too
-                if(std::find(MapIterator->second.begin(), MapIterator->second.end(), ArrayTableElement2.first) != MapIterator->second.end())
-                {
-                    MapIterator->second.push_back(ArrayTableElement1.first);
-                    break;
-                }
+                // Increment the counter for the number of the cluster groups
+                int *TempForNumberOfCG;
+                TempForNumberOfCG = &NumberOfClusterGroups;
+                ++*TempForNumberOfCG;
 
-                // If none of them is inside a group, then create a new group
-                else
-                {
-                    // Increment the counter for the number of the cluster groups
-                    int *TempForNumberOfCG;
-                    TempForNumberOfCG = &NumberOfClusterGroups;
-                    ++*TempForNumberOfCG;
+                std::vector<std::string> TempStorage = {ArrayTableElement1.first, ArrayTableElement2.first};
 
-                    std::vector<std::string> TempStorage = {ArrayTableElement1.first, ArrayTableElement2.first};
+                ClusteredGroups[NumberOfClusterGroups] = TempStorage;
 
-                    ClusteredGroups[NumberOfClusterGroups] = TempStorage;
-
-                    TempStorage.clear();
-                }
+                TempStorage.clear();
             }
         }
     }
 
-    if(TempStrorageForIndeces != -1)
+    if(TempStrorageForErase != -1)
     {
-        for(MapIterator = ClusteredGroups.begin(); MapIterator != ClusteredGroups.end(); ++MapIterator)
+        for(MapIteratorMain = ClusteredGroups.begin(); MapIteratorMain != ClusteredGroups.end(); ++MapIteratorMain)
         {
-            int TempIndexFind = TempStrorageForIndeces + 1;
-            if(MapIterator->first == TempIndexFind)
+            TempStrorageForSearch = TempStrorageForErase + 1;
+            if(MapIteratorMain->first == TempStrorageForSearch)
             {
-                ClusteredGroups[TempStrorageForIndeces] = ClusteredGroups[TempIndexFind];
-                ClusteredGroups.erase(TempIndexFind);
-                ++TempStrorageForIndeces;
+                ClusteredGroups[TempStrorageForErase] = ClusteredGroups[TempStrorageForSearch];
+                ClusteredGroups.erase(TempStrorageForSearch);
+                ++TempStrorageForErase;
             }
         }
-        TempStrorageForIndeces = -1;
+        TempStrorageForErase = -1;
     }
 
     std::cout << "Elapsed time: " << (std::clock() - StartTime) / (double)(CLOCKS_PER_SEC / 1000) << " ms\n" << std::endl;
@@ -359,9 +377,9 @@ std::map<int, std::vector<std::string>> BasicClusterFrame(std::map<int, std::vec
     //  O.X.O
     if((ArrayTable[(i + 1) * Columns + j].second < ArrayTable[i * Columns + j].second + dx) && (ArrayTable[(i + 1) * Columns + j].second > ArrayTable[i * Columns + j].second - dx))
     {
-        ArrayTableElement1 = ArrayTable[(i + 1) * Columns + j];
-        ArrayTableElement2 = ArrayTable[(i + 1) * Columns + (j - 1)];
-        ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2, dx);
+        ArrayTableElement1 = ArrayTable[i * Columns + j];
+        ArrayTableElement2 = ArrayTable[(i + 1) * Columns + j];
+        ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2);
     }
 
     //  O.O.O
@@ -369,9 +387,9 @@ std::map<int, std::vector<std::string>> BasicClusterFrame(std::map<int, std::vec
     //  O.O.O
     if((ArrayTable[i * Columns + (j + 1)].second < ArrayTable[i * Columns + j].second + dx) && (ArrayTable[i * Columns + (j + 1)].second > ArrayTable[i * Columns + j].second - dx))
     {
-        ArrayTableElement1 = ArrayTable[(i + 1) * Columns + j];
-        ArrayTableElement2 = ArrayTable[(i + 1) * Columns + (j - 1)];
-        ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2, dx);
+        ArrayTableElement1 = ArrayTable[i * Columns + j];
+        ArrayTableElement2 = ArrayTable[i * Columns + (j + 1)];
+        ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2);
     }
 
     return(ClusteredGroups);
@@ -397,7 +415,7 @@ std::map<int, std::vector<std::string>> UppermostBarClusterFrame(std::map<int, s
     {
         ArrayTableElement1 = ArrayTable[i * Columns + j];
         ArrayTableElement2 = ArrayTable[(i - 1) * Columns + j];
-        ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2, dx);
+        ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2);
     }
 
     // Activates if the element in the cell (i-1)(j+1)# (here 1-3) is in the radii criterium compared to the (i-1)j# (here 1-2) element
@@ -408,7 +426,7 @@ std::map<int, std::vector<std::string>> UppermostBarClusterFrame(std::map<int, s
     {
         ArrayTableElement1 = ArrayTable[(i - 1) * Columns + j];
         ArrayTableElement2 = ArrayTable[(i - 1) * Columns + (j + 1)];
-        ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2, dx);
+        ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2);
     }
 
     return(ClusteredGroups);
@@ -434,7 +452,7 @@ std::map<int, std::vector<std::string>> LeftmostBarClusterFrame(std::map<int, st
     {
         ArrayTableElement1 = ArrayTable[i * Columns + (j - 1)];
         ArrayTableElement2 = ArrayTable[i * Columns + j];
-        ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2, dx);
+        ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2);
     }
 
     // Activates if the element in the cell (i+1)(j-1)# (here 3-1) is in the radii criterium compared to the i(j-1)# (here 2-1) element
@@ -445,7 +463,7 @@ std::map<int, std::vector<std::string>> LeftmostBarClusterFrame(std::map<int, st
     {
         ArrayTableElement1 = ArrayTable[i * Columns + (j - 1)];
         ArrayTableElement2 = ArrayTable[(i + 1) * Columns + (j - 1)];
-        ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2, dx);
+        ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2);
     }
 
     return(ClusteredGroups);
@@ -471,7 +489,7 @@ std::map<int, std::vector<std::string>> RightmostBarClusterFrame(std::map<int, s
     {
         ArrayTableElement1 = ArrayTable[i * Columns + (j + 1)];
         ArrayTableElement2 = ArrayTable[(i + 1) * Columns + (j + 1)];
-        ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2, dx);
+        ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2);
     }
 
     return(ClusteredGroups);
@@ -495,7 +513,7 @@ std::map<int, std::vector<std::string>> BottommostBarClusterFrame(std::map<int, 
     {
         ArrayTableElement1 = ArrayTable[(i + 1) * Columns + j];
         ArrayTableElement2 = ArrayTable[(i + 1) * Columns + (j + 1)];
-        ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2, dx);
+        ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2);
     }
 
     return(ClusteredGroups);
@@ -511,177 +529,248 @@ std::map<int, std::vector<std::string>> ClusteringBruteForce(std::vector<std::pa
     std::pair<std::string,double> ArrayTableElement1;
     std::pair<std::string,double> ArrayTableElement2;
 
-    // We on run through on the tiles, which are inside the outermost frame of our 2D table
+    // Element indeces
+    int i;
+    int j;
+
+
+    // We only on run through the tiles, which are situated inside the outermost frame of our 2D table
     // This means we start from the 2-2 element
     // The X-s indicates, which elements are compared around the middle one
-    for(int i = 1; i < Rows - 1; i++)
+
+    // STEP 1.
+    // We check the corner elements, they all have their own unique moves
+    // O.O.O.O.O.O.O
+    // O.X.O.O.O.X.O
+    // O.O.O.O.O.O.O
+    // O.O.O.O.O.O.O
+    // O.X.O.O.O.X.O
+    // O.O.O.O.O.O.O
+    
+    // 1./a
+    // UPPER LEFT corner
+    i = 1;
+    j = 1;
+
+    ClusteredGroups = BasicClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
+    ClusteredGroups = UppermostBarClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
+    ClusteredGroups = LeftmostBarClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
+
+    // Activates if the element in the UPPER LEFT corner (here 0-0) is in the radii criterium compared to the (i-1)j# (here 0-1) element
+    //  X.X.O
+    //  O.O.O
+    //  O.O.O
+    if((ArrayTable[(i - 1) * Columns + (j - 1)].second < ArrayTable[(i - 1) * Columns + j].second + dx) && (ArrayTable[(i - 1) * Columns + (j - 1)].second > ArrayTable[(i - 1) * Columns + j].second - dx))
     {
-        for(int j = 1; j < Columns - 1; j++)
+        ArrayTableElement1 = ArrayTable[(i - 1) * Columns + j];
+        ArrayTableElement2 = ArrayTable[(i - 1) * Columns + (j - 1)];
+        ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2);
+    }
+
+    // Activates if the element in the UPPER LEFT corner (here 0-0) is in the radii criterium compared to the i(j-1)# (here 1-0) element
+    //  X.O.O
+    //  X.O.O
+    //  O.O.O
+    if((ArrayTable[(i - 1) * Columns + (j - 1)].second < ArrayTable[i * Columns + (j - 1)].second + dx) && (ArrayTable[(i - 1) * Columns + (j - 1)].second > ArrayTable[i * Columns + (j - 1)].second - dx))
+    {
+        ArrayTableElement1 = ArrayTable[i * Columns + (j - 1)];
+        ArrayTableElement2 = ArrayTable[(i - 1) * Columns + (j - 1)];
+        ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2);
+    }
+
+    // 1./b
+    // UPPER RIGHT corner
+    i = 1;
+    j = Columns - 2;
+    ClusteredGroups = BasicClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
+    ClusteredGroups = RightmostBarClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
+
+    // Activates if the element in the cell (i-1)j# (here 0-(Columns - 2)) is in the radii criterium compared to the ij# (here 1-(Cols - 2)) element
+    //  O.X.O
+    //  O.X.O
+    //  O.O.O
+    if((ArrayTable[(i - 1) * Columns + j].second < ArrayTable[i * Columns + j].second + dx) && (ArrayTable[(i - 1) * Columns + j].second > ArrayTable[i * Columns + j].second - dx))
+    {
+        ArrayTableElement1 = ArrayTable[i * Columns + j];
+        ArrayTableElement2 = ArrayTable[(i - 1) * Columns + j];
+        ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2);
+    }
+
+    // Activates if the element in the UPPER RIGHT corner (here 0-(Cols - 1)) is in the radii criterium compared to the i(j+1)# (here 1-(Cols - 1)) element
+    //  O.O.X
+    //  O.O.X
+    //  O.O.O
+    if((ArrayTable[(i - 1) * Columns + (j + 1)].second < ArrayTable[i * Columns + (j + 1)].second + dx) && (ArrayTable[(i - 1) * Columns + (j + 1)].second > ArrayTable[i * Columns + (j + 1)].second - dx))
+    {
+        ArrayTableElement1 = ArrayTable[i * Columns + (j + 1)];
+        ArrayTableElement2 = ArrayTable[(i - 1) * Columns + (j + 1)];
+        ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2);
+    }
+
+    // Activates if the element in the UPPER RIGHT corner (here 0-(Cols - 1)) is in the radii criterium compared to the (i-1)j# (here 0-(Cols - 2)) element
+    //  O.X.X
+    //  O.O.O
+    //  O.O.O
+    if((ArrayTable[(i - 1) * Columns + (j + 1)].second < ArrayTable[(i - 1) * Columns + j].second + dx) && (ArrayTable[(i - 1) * Columns + (j + 1)].second > ArrayTable[(i - 1) * Columns + j].second - dx))
+    {
+        ArrayTableElement1 = ArrayTable[(i - 1) * Columns + j];
+        ArrayTableElement2 = ArrayTable[(i - 1) * Columns + (j + 1)];
+        ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2);
+    }
+
+    // 1./c
+    // BOTTOM LEFT corner
+    i = Rows - 2;
+    j = 1;
+
+    ClusteredGroups = BasicClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
+    ClusteredGroups = BottommostBarClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
+    
+    // Activates if the element in the cell (here (Rows - 2)-0)# is in the radii criterium compared to the ij# (here (Rows - 2)-1) element
+    //  O.O.O
+    //  X.X.O
+    //  O.O.O
+    if((ArrayTable[i * Columns + (j - 1)].second < ArrayTable[i * Columns + j].second + dx) && (ArrayTable[(i + 1) * Columns + (j - 1)].second > ArrayTable[i * Columns + j].second - dx))
+    {
+        ArrayTableElement1 = ArrayTable[i * Columns + j];
+        ArrayTableElement2 = ArrayTable[i * Columns + (j - 1)];
+        ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2);
+    }
+
+    // Activates if the element in the BOTTOM LEFT corner (here (Rows - 1)-0) is in the radii criterium compared to the (i+1)j# (here (Rows - 1)-1) element
+    //  O.O.O
+    //  O.O.O
+    //  X.X.O
+    if((ArrayTable[(i + 1) * Columns + (j - 1)].second < ArrayTable[(i + 1) * Columns + j].second + dx) && (ArrayTable[(i + 1) * Columns + (j - 1)].second > ArrayTable[(i + 1) * Columns + j].second - dx))
+    {
+        ArrayTableElement1 = ArrayTable[(i + 1) * Columns + j];
+        ArrayTableElement2 = ArrayTable[(i + 1) * Columns + (j - 1)];
+        ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2);
+    }
+
+    // Activates if the element in the BOTTOM LEFT corner (here (Rows - 1)-0) is in the radii criterium compared to the i(j-1)# (here (Rows - 2)-0) element
+    //  O.O.O
+    //  X.O.O
+    //  X.O.O
+    if((ArrayTable[(i + 1) * Columns + (j - 1)].second < ArrayTable[i * Columns + (j - 1)].second + dx) && (ArrayTable[(i + 1) * Columns + (j - 1)].second > ArrayTable[i * Columns + (j - 1)].second - dx))
+    {
+        ArrayTableElement1 = ArrayTable[i * Columns + (j - 1)];
+        ArrayTableElement2 = ArrayTable[(i + 1) * Columns + (j - 1)];
+        ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2);
+    }
+
+    // 1./d
+    // BOTTOM RIGHT corner
+    i = Rows - 2;
+    j = Columns - 2;
+
+    ClusteredGroups = BasicClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
+                
+    // Activates if the element in the BOTTOM RIGHT corner (here Rows-Columns) is in the radii criterium compared to the (i+1)j# (here (Rows - 1)-(Columns - 2)) element
+    //  O.O.O
+    //  O.O.O
+    //  O.X.X
+    if((ArrayTable[(i + 1) * Columns + (j + 1)].second < ArrayTable[(i + 1) * Columns + j].second + dx) && (ArrayTable[(i + 1) * Columns + (j + 1)].second > ArrayTable[(i + 1) * Columns + j].second - dx))
+    {
+        ArrayTableElement1 = ArrayTable[(i + 1) * Columns + j];
+        ArrayTableElement2 = ArrayTable[(i + 1) * Columns + (j + 1)];
+        ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2);
+    }
+
+    // Activates if the element in the BOTTOM RIGHT corner (here Rows-Columns) is in the radii criterium compared to the i(j+1)# (here (Rows - 2)-(Columns - 1)) element
+    //  O.O.O
+    //  O.O.X
+    //  O.O.X
+    if((ArrayTable[(i + 1) * Columns + (j + 1)].second < ArrayTable[i * Columns + (j + 1)].second + dx) && (ArrayTable[(i + 1) * Columns + (j + 1)].second > ArrayTable[i * Columns + (j + 1)].second - dx))
+    {
+        ArrayTableElement1 = ArrayTable[i * Columns + (j + 1)];
+        ArrayTableElement2 = ArrayTable[(i + 1) * Columns + (j + 1)];
+        ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2);
+    }
+
+    // STEP 2.
+    // We run through the outer frame of our iteration area, but except corner tiles
+    // O.O.O.O.O.O.O
+    // O.O.X.X.X.O.O
+    // O.X.O.O.O.X.O
+    // O.X.O.O.O.X.O
+    // O.O.X.X.X.O.O
+    // O.O.O.O.O.O.O
+
+    // 2./a
+    // Run through the uppermost bar of tiles
+    // O.O.O.O.O.O.O
+    // O.O.X.X.X.O.O
+    // O.O.O.O.O.O.O
+    // O.O.O.O.O.O.O
+    // O.O.O.O.O.O.O
+    // O.O.O.O.O.O.O
+    i = 1;
+    for(int j = 2; j <= Columns - 3; j++)
+    {
+        ClusteredGroups = BasicClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
+        ClusteredGroups = UppermostBarClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
+    }
+
+    // 2./b
+    // Run throught the bottommost bar of tiles
+    // O.O.O.O.O.O.O
+    // O.O.O.O.O.O.O
+    // O.O.O.O.O.O.O
+    // O.O.O.O.O.O.O
+    // O.O.X.X.X.O.O
+    // O.O.O.O.O.O.O
+    i = Rows - 2;
+    for(int j = 2; j <= Columns - 3; j++)
+    {
+        ClusteredGroups = BasicClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
+        ClusteredGroups = BottommostBarClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
+    }
+
+    // 2./c
+    // Run throught the leftmost bar of tiles
+    // O.O.O.O.O.O.O
+    // O.O.O.O.O.O.O
+    // O.X.O.O.O.O.O
+    // O.X.O.O.O.O.O
+    // O.O.O.O.O.O.O
+    // O.O.O.O.O.O.O
+    j = 1;
+    for(i = 2; i <= Rows - 3; i++)
+    {
+        ClusteredGroups = BasicClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
+        ClusteredGroups = LeftmostBarClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
+    }
+
+    // 2./d
+    // Run throught the rightmost bar of tiles
+    // O.O.O.O.O.O.O
+    // O.O.O.O.O.O.O
+    // O.O.O.O.O.X.O
+    // O.O.O.O.O.X.O
+    // O.O.O.O.O.O.O
+    // O.O.O.O.O.O.O
+    j = Columns - 2;
+    for(i = 2; i <= Rows - 3; i++)
+    {
+        ClusteredGroups = BasicClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
+        ClusteredGroups = RightmostBarClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
+    }
+
+    // STEP 3.
+    // We run through on the inside of our table two frame deep
+    // O.O.O.O.O.O.O
+    // O.O.O.O.O.O.O
+    // O.O.X.X.X.O.O
+    // O.O.X.X.X.O.O
+    // O.O.O.O.O.O.O
+    // O.O.O.O.O.O.O
+    for(int i = 2; i <= Rows - 3; i++)
+    {
+        for(int j = 2; j <= Columns - 3; j++)
         {
             // Basic step in the clustering, needed for every step
             ClusteredGroups = BasicClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
-
-            // UPPER LEFT corner
-            if(i == 1 && j == 1)
-            {
-                ClusteredGroups = UppermostBarClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
-                ClusteredGroups = LeftmostBarClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
-
-                // Activates if the element in the UPPER LEFT corner (here 1-1) is in the radii criterium compared to the (i-1)j# (here 1-2) element
-                //  X.X.O
-                //  O.O.O
-                //  O.O.O
-                if((ArrayTable[(i - 1) * Columns + (j - 1)].second < ArrayTable[(i - 1) * Columns + j].second + dx) && (ArrayTable[(i - 1) * Columns + (j - 1)].second > ArrayTable[(i - 1) * Columns + j].second - dx))
-                {
-                    ArrayTableElement1 = ArrayTable[(i - 1) * Columns + j];
-                    ArrayTableElement2 = ArrayTable[(i - 1) * Columns + (j - 1)];
-                    ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2, dx);
-                }
-
-                // Activates if the element in the UPPER LEFT corner (here 1-1) is in the radii criterium compared to the i(j-1)# (here 2-1) element
-                //  X.O.O
-                //  X.O.O
-                //  O.O.O
-                if((ArrayTable[(i - 1) * Columns + (j - 1)].second < ArrayTable[i * Columns + (j - 1)].second + dx) && (ArrayTable[(i - 1) * Columns + (j - 1)].second > ArrayTable[i * Columns + (j - 1)].second - dx))
-                {
-                    ArrayTableElement1 = ArrayTable[i * Columns + (j - 1)];
-                    ArrayTableElement2 = ArrayTable[(i - 1) * Columns + (j - 1)];
-                    ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2, dx);
-                }
-            }
-
-            // UPPER RIGHT corner
-            else if(i == 1 && j == Columns - 2)
-            {
-                ClusteredGroups = RightmostBarClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
-                
-                // Activates if the element in the UPPER RIGHT corner (here 1-(Cols)) is in the radii criterium compared to the (i-1)j# (here 1-(Cols - 1)) element
-                //  O.X.X
-                //  O.O.O
-                //  O.O.O
-                if((ArrayTable[(i - 1) * Columns + (j + 1)].second < ArrayTable[(i - 1) * Columns + j].second + dx) && (ArrayTable[(i - 1) * Columns + (j + 1)].second > ArrayTable[(i - 1) * Columns + j].second - dx))
-                {
-                    ArrayTableElement1 = ArrayTable[(i - 1) * Columns + j];
-                    ArrayTableElement2 = ArrayTable[(i - 1) * Columns + (j + 1)];
-                    ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2, dx);
-                }
-
-                // Activates if the element in the UPPER RIGHT corner (here 1-(Cols)) is in the radii criterium compared to the i(j+1)# (here 2-(Cols)) element
-                //  O.O.X
-                //  O.O.X
-                //  O.O.O
-                if((ArrayTable[(i - 1) * Columns + (j + 1)].second < ArrayTable[i * Columns + (j + 1)].second + dx) && (ArrayTable[(i - 1) * Columns + (j + 1)].second > ArrayTable[i * Columns + (j + 1)].second - dx))
-                {
-                    ArrayTableElement1 = ArrayTable[i * Columns + (j + 1)];
-                    ArrayTableElement2 = ArrayTable[(i - 1) * Columns + (j + 1)];
-                    ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2, dx);
-                }
-
-                // Activates if the element in the cell (i-1)j# (here 1-(Columns - 1)) is in the radii criterium compared to the ij# (here 2-(Cols - 1)) element
-                //  O.X.O
-                //  O.X.O
-                //  O.O.O
-                if((ArrayTable[(i - 1) * Columns + j].second < ArrayTable[i * Columns + j].second + dx) && (ArrayTable[(i - 1) * Columns + j].second > ArrayTable[i * Columns + j].second - dx))
-                {
-                    ArrayTableElement1 = ArrayTable[i * Columns + j];
-                    ArrayTableElement2 = ArrayTable[(i - 1) * Columns + j];
-                    ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2, dx);
-                }
-            }
-
-            // BOTTOM LEFT corner
-            else if(i == Rows - 2 && j == 1)
-            {
-                ClusteredGroups = BottommostBarClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
-                
-                // Activates if the element in the BOTTOM LEFT corner (here (Rows)-1) is in the radii criterium compared to the (i+1)j# (here (Rows)-2) element
-                //  O.O.O
-                //  O.O.O
-                //  X.X.O
-                if((ArrayTable[(i + 1) * Columns + (j - 1)].second < ArrayTable[(i + 1) * Columns + j].second + dx) && (ArrayTable[(i + 1) * Columns + (j - 1)].second > ArrayTable[(i + 1) * Columns + j].second - dx))
-                {
-                    ArrayTableElement1 = ArrayTable[(i + 1) * Columns + j];
-                    ArrayTableElement2 = ArrayTable[(i + 1) * Columns + (j - 1)];
-                    ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2, dx);
-                }
-
-                // Activates if the element in the BOTTOM LEFT corner (here (Rows)-1) is in the radii criterium compared to the i(j-1)# (here (Rows - 1)-1) element
-                //  O.O.O
-                //  X.O.O
-                //  X.O.O
-                if((ArrayTable[(i + 1) * Columns + (j - 1)].second < ArrayTable[i * Columns + (j - 1)].second + dx) && (ArrayTable[(i + 1) * Columns + (j - 1)].second > ArrayTable[i * Columns + (j - 1)].second - dx))
-                {
-                    ArrayTableElement1 = ArrayTable[i * Columns + (j - 1)];
-                    ArrayTableElement2 = ArrayTable[(i + 1) * Columns + (j - 1)];
-                    ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2, dx);
-                }
-
-                // Activates if the element in the cell (here (Rows - 1)-1)# is in the radii criterium compared to the ij# (here (Rows - 1)-2) element
-                //  O.O.O
-                //  X.X.O
-                //  O.O.O
-                if((ArrayTable[i * Columns + (j - 1)].second < ArrayTable[i * Columns + j].second + dx) && (ArrayTable[(i + 1) * Columns + (j - 1)].second > ArrayTable[i * Columns + j].second - dx))
-                {
-                    ArrayTableElement1 = ArrayTable[i * Columns + j];
-                    ArrayTableElement2 = ArrayTable[i * Columns + (j - 1)];
-                    ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2, dx);
-                }
-            }
-
-            // BOTTOM RIGHT corner
-            else if(i == Rows - 2 && j == Columns - 2)
-            {
-                
-                // Activates if the element in the BOTTOM RIGHT corner (here Rows-Columns) is in the radii criterium compared to the (i+1)j# (here (Rows - 1)-(Columns - 2)) element
-                //  O.O.O
-                //  O.O.O
-                //  O.X.X
-                if((ArrayTable[(i + 1) * Columns + (j + 1)].second < ArrayTable[(i + 1) * Columns + j].second + dx) && (ArrayTable[(i + 1) * Columns + (j + 1)].second > ArrayTable[(i + 1) * Columns + j].second - dx))
-                {
-                    ArrayTableElement1 = ArrayTable[(i + 1) * Columns + j];
-                    ArrayTableElement2 = ArrayTable[(i + 1) * Columns + (j + 1)];
-                    ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2, dx);
-                }
-
-                // Activates if the element in the BOTTOM RIGHT corner (here Rows-Columns) is in the radii criterium compared to the i(j+1)# (here (Rows - 2)-(Columns - 1)) element
-                //  O.O.O
-                //  O.O.X
-                //  O.O.X
-                if((ArrayTable[(i + 1) * Columns + (j + 1)].second < ArrayTable[i * Columns + (j + 1)].second + dx) && (ArrayTable[(i + 1) * Columns + (j + 1)].second > ArrayTable[i * Columns + (j + 1)].second - dx))
-                {
-                    ArrayTableElement1 = ArrayTable[i * Columns + (j + 1)];
-                    ArrayTableElement2 = ArrayTable[(i + 1) * Columns + (j + 1)];
-                    ClusteredGroups = ClusterStep(ClusteredGroups, ArrayTableElement1, ArrayTableElement2, dx);
-                }
-            }
-
-            // Uppermost bar of tiles
-            else if(i == 1 && j != 1 && j != Columns - 2)
-            {
-                ClusteredGroups = UppermostBarClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
-            }
-
-            // Bottommost bar of tiles
-            else if(i == Rows - 2 && j != 1 && j != Columns - 2)
-            {
-                ClusteredGroups = BottommostBarClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
-            }
-
-            // Leftmost bar of tiles
-            else if(i != 1 && i != Rows - 2 && j == 1)
-            {
-                ClusteredGroups = LeftmostBarClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
-            }
-
-            // Rightmost bar of tiles
-            else if(i != 1 && i != Rows - 2 && j == Columns - 2)
-            {
-                ClusteredGroups = RightmostBarClusterFrame(ClusteredGroups, ArrayTable, Rows, Columns, i, j, dx);
-            }
-
-            // Other tiles
-            else
-            {} // Only the basic move needed
         }
     }
 
@@ -709,11 +798,11 @@ void WriteToFile(std::map<int, std::vector<std::string>> ClusteredGroups)
     for(MapIterator = ClusteredGroups.begin(); MapIterator != ClusteredGroups.end(); ++MapIterator)
     {
         OutputFile << "Cluster #" << MapIterator->first << ":     {";
-        for(StringVectorIterator = MapIterator->second.begin(); StringVectorIterator != MapIterator->second.end(); ++MapIterator)
+        for(StringVectorIterator = MapIterator->second.begin(); StringVectorIterator != MapIterator->second.end(); ++StringVectorIterator)
         {
-            OutputFile << *StringVectorIterator << ", ";
+            OutputFile << *StringVectorIterator << "; ";
         }
-        OutputFile << "}" << std::endl;
+        OutputFile << "END}" << std::endl;
     }
 
     OutputFile.close();
