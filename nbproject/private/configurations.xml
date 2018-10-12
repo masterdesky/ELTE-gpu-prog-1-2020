@@ -40,6 +40,8 @@
       </df>
       <df name=".vscode">
       </df>
+      <df name="build">
+      </df>
       <df name="CMakeFiles">
         <df name="3.7.1">
           <df name="CompilerIdC">
@@ -62,6 +64,7 @@
       </df>
       <in>cluster2d.cpp</in>
       <in>testiterator.cpp</in>
+      <in>vector.cpp</in>
     </df>
   </logicalFolder>
   <projectmakefile>Makefile</projectmakefile>

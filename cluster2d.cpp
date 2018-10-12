@@ -1,21 +1,39 @@
+//////////////////////////////////////////////////////////////////////////////////
+//                                                                              //
+//      _____              _____ _           _            _                     //
+//     /  __ \ _     _    /  __ \ |         | |          (_)                    //
+//     | /  \/| |_ _| |_  | /  \/ |_   _ ___| |_ ___ _ __ _ _ __   __ _         //
+//     | |  |_   _|_   _| | |   | | | | / __| __/ _ \ '__| | '_ \ / _` |        //
+//     | \__/\|_|   |_|   | \__/\ | |_| \__ \ ||  __/ |  | | | | | (_| |        //
+//      \____/             \____/_|\__,_|___/\__\___|_|  |_|_| |_|\__, |        //
+//                                                                 __/ |        //
+//                                                                |___/         //
+//                                                                              //
+//////////////////////////////////////////////////////////////////////////////////
+
 #include <iostream>
 #include <sstream>
 #include <fstream>
+
 #include <vector>
-#include <utility>
 #include <map>
+#include <utility>
 #include <algorithm>
+
 #include <random>
-#include <thread>
+#include <future>
+#include <chrono>
 #include <ctime>
 
-// ####### 0. GLOBAL PARAMETERS #######
+// ####### GLOBAL PARAMETERS #######
 
 // A global string for indicating current version of program
 std::string VersionNumber = "1.0";
 
 // Counter for the number of cluster group = 0;
 int NumberOfClusterGroups = 0;
+
+// ####### 0. AUXILIARY FUNCTIONS #######
 
 
 // ####### 1. INITIALIZING FUNCTIONS #######
@@ -24,6 +42,7 @@ int NumberOfClusterGroups = 0;
 // Rows: Number of rows of the 2D data table
 // Columns: Number of columns of the 2D data table
 // MaxElement: Maximum value of elements of the 2D data table
+// dx: Largest allowed distance between two neighbouring tile
 std::tuple<int, int, double, double> Initialization()
 {
     int Rows;
@@ -212,8 +231,8 @@ void PrintElements(std::vector<std::pair<std::string,double>> ArrayTable, int Ro
 std::map<int, std::vector<std::string>> ClusterStep(std::map<int, std::vector<std::string>> ClusteredGroups, std::pair<std::string,double> ArrayTableElement1, std::pair<std::string,double> ArrayTableElement2)
 {
     // Measure time
-    std::clock_t StartTime;
-    StartTime = std::clock();
+    //std::clock_t StartTime;
+    //StartTime = std::clock();
 
     // Iterator for the map structure
     std::map<int, std::vector<std::string>>::iterator MapIteratorMain;
@@ -231,7 +250,7 @@ std::map<int, std::vector<std::string>> ClusterStep(std::map<int, std::vector<st
     int IndicatorMain = 0;
     int Indicator = 0;
 
-    std::cout << "INFORMATIVE MESSAGE: Check is now executed between tile " << ArrayTableElement1.first << " and " << ArrayTableElement2.first << std::endl;
+    //std::cout << "INFORMATIVE MESSAGE: Check is now executed between tile " << ArrayTableElement1.first << " and " << ArrayTableElement2.first << std::endl;
 
     if(ClusteredGroups.size() == 0)
     {
@@ -359,7 +378,7 @@ std::map<int, std::vector<std::string>> ClusterStep(std::map<int, std::vector<st
         TempStrorageForErase = -1;
     }
 
-    std::cout << "Elapsed time: " << (std::clock() - StartTime) / (double)(CLOCKS_PER_SEC / 1000) << " ms\n" << std::endl;
+    //std::cout << "Elapsed time: " << (std::clock() - StartTime) / (double)(CLOCKS_PER_SEC / 1000) << " ms\n" << std::endl;
 
     return(ClusteredGroups);
 }
@@ -806,35 +825,62 @@ void WriteToFile(std::map<int, std::vector<std::string>> ClusteredGroups)
     }
 
     OutputFile.close();
-
 }
+
+
 
 int main()
 {
     std::cout << ">>>    CLUSTERING WITH C++ PARALLEL PROGRAMMING    <<<" << std::endl;
 	std::cout << ">>>                  VERSION " << VersionNumber << "                   <<<\n\n" << std::endl;
 
+    // Parameter Initialization at the beginning of the program
     auto InitialParameters = Initialization();
-
+    // Used variables
     int Rows = std::get<0>(InitialParameters);
     int Columns = std::get<1>(InitialParameters);
     double MaxElement = std::get<2>(InitialParameters);
     double dx = std::get<3>(InitialParameters);
 
+    // Measuring time for generating data table begin
+    auto TimeBeginGenerate = std::chrono::high_resolution_clock::now();
+
     // Generate a 2D table with random floats, valued between 0 and a choosen number
     std::vector<std::pair<std::string,double>> ArrayTable = Generate2dArray(Rows, Columns, MaxElement);
     std::cout << "INFORMATIVE MESSAGE: The data table has been created!\n" << std::endl;
 
+    // Measuring time for generating data table end
+    auto TimeEndGenerate = std::chrono::high_resolution_clock::now();
+
     // Run test
-    PrintElements(ArrayTable, Rows, Columns);
+    //PrintElements(ArrayTable, Rows, Columns);
+
+    // Measuring time for bruteforce clustering begin
+    auto TimeBeginBruteCluster = std::chrono::high_resolution_clock::now();
 
     // Cluster with bruteforce method
     auto ClusteredGroups = ClusteringBruteForce(ArrayTable, Rows, Columns, dx);
     std::cout << "INFORMATIVE MESSAGE: Clustering steps finished!\n" << std::endl;
 
+    // Measuring time for bruteforce clustering end
+    auto TimeEndBruteCluster = std::chrono::high_resolution_clock::now();
+
+
+    // Measuring time for writing data begin
+    auto TimeBeginWrite = std::chrono::high_resolution_clock::now();
+    
     // Write data to output file
     WriteToFile(ClusteredGroups);
     std::cout << "INFORMATIVE MESSAGE: Output file created!\n" << std::endl;
 
+    // Measuring time for writing data end
+    auto TimeEndWrite = std::chrono::high_resolution_clock::now();
+
     std::cout << "INFORMATIVE MESSAGE: Clustering is completed!\n" << std::endl;
+
+    // Time information
+    std::cout << "INFORMATION ABOUT RUNNING TIME" << std::endl;
+    std::cout << "Time needed for generating data table: " << std::chrono::duration_cast<std::chrono::microseconds>(TimeEndGenerate - TimeBeginGenerate).count() << " usec\n";
+    std::cout << "Time needed for bruteforce clustering: " << std::chrono::duration_cast<std::chrono::microseconds>(TimeEndBruteCluster - TimeBeginBruteCluster).count() << " usec\n";
+    std::cout << "Time needed for writing data into file: " << std::chrono::duration_cast<std::chrono::microseconds>(TimeEndWrite - TimeBeginWrite).count() << " usec\n";
 }
