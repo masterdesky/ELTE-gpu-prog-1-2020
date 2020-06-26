@@ -842,11 +842,11 @@ void write_to_file(std::vector<std::pair<std::string,double>> table, int rows, i
     output_file.open("..//output//clustered_data.txt");
 
     // Write a header for the output file
-    output_file << "Indeces of clusters,Elements of clusters" << std::endl;
+    output_file << "Indeces of clusters\tElements of clusters" << std::endl;
     // Write the clusters' data into the file
     for(map_iterator = clustered_groups.begin(); map_iterator != clustered_groups.end(); ++map_iterator)
     {
-        output_file << "cluster_" << map_iterator->first << ",[[";
+        output_file << "cluster_" << map_iterator->first << "\t[[";
         for(string_vector_iterator = map_iterator->second.begin(); string_vector_iterator != map_iterator->second.end(); ++string_vector_iterator)
         {
             output_file << *string_vector_iterator << "],[";
@@ -855,7 +855,6 @@ void write_to_file(std::vector<std::pair<std::string,double>> table, int rows, i
     }
     output_file.close();
 }
-
 
 
 int main()
