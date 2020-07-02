@@ -132,18 +132,42 @@ std::tuple<int, int, double, double> Initialization()
             std::cout << "WARNING: Write \'Y\' to continue, or \'N\' to give \'dx\' an other value: ";
             std::cin >> Choosedx;
             
-            if(Choosedx.compare("Y") == 0 || Choosedx.compare("y") == 0 || Choosedx.compare("Yes") == 0 || Choosedx.compare("yes") == 0 || Choosedx.compare("YEs") == 0 || Choosedx.compare("yEs") == 0 || Choosedx.compare("yeS") == 0 || Choosedx.compare("YeS") == 0 || Choosedx.compare("yES") == 0)
+            if(Choosedx.compare("Y") == 0
+               ||
+               Choosedx.compare("y") == 0
+               ||
+               Choosedx.compare("Yes") == 0
+               ||
+               Choosedx.compare("yes") == 0
+               ||
+               Choosedx.compare("YEs") == 0
+               ||
+               Choosedx.compare("yEs") == 0
+               ||
+               Choosedx.compare("yeS") == 0
+               ||
+               Choosedx.compare("YeS") == 0
+               ||
+               Choosedx.compare("yES") == 0)
             {
                 std::cout << "\n\n";
                 break;
             }
-            else if(Choosedx.compare("N") == 0 || Choosedx.compare("n") == 0 || Choosedx.compare("No") == 0 || Choosedx.compare("no") == 0 || Choosedx.compare("nO") == 0)
+            else if(Choosedx.compare("N") == 0
+                    ||
+                    Choosedx.compare("n") == 0
+                    ||
+                    Choosedx.compare("No") == 0
+                    ||
+                    Choosedx.compare("no") == 0
+                    ||
+                    Choosedx.compare("nO") == 0)
             {
                 std::cout << "\n\n" << std::endl;
             } // Do nothing; go to the start of the loop
         }
 
-        else if(dx < max_element)
+        else if(dx < max_element && dx >= 0)
         {
             std::cout << "\n\n";
             break;
@@ -152,7 +176,7 @@ std::tuple<int, int, double, double> Initialization()
         else
         {
             std::cout << "ERROR: Not permitted input!\n";
-            std::cout << "       The value of \'dx\' should be a positive real number! Please try again!" << std::endl;
+            std::cout << "       The value of \'dx\' should be a non-negative real number! Please try again!" << std::endl;
         }
     }
 
@@ -177,7 +201,7 @@ std::tuple<int, int, double, double> Initialization()
 // #ofrows - #ofcolumns
 std::vector<std::pair<std::string,double>> gen_2d_table(int rows, int columns, double max_element)
 {
-    std::vector<std::pair<std::string,double>> table;
+    std::vector<std::pair<std::string, double>> table;
     std::stringstream pos_idx;
 
     //Randomize
@@ -215,7 +239,7 @@ std::vector<std::pair<std::string,double>> gen_2d_table(int rows, int columns, d
 
 // Test
 // Print out the generated 2D data table's elements
-void PrintElements(std::vector<std::pair<std::string,double>> table, int rows, int columns)
+void PrintElements(std::vector<std::pair<std::string, double>> table, int rows, int columns)
 {
     for(int i = 0; i < rows; i++)
     {
@@ -235,14 +259,13 @@ void PrintElements(std::vector<std::pair<std::string,double>> table, int rows, i
 // 1. Activates if both of the neighbouring tiles are inside the same radii criterium
 // 2. The function then classify them to the proper cluster (group)
 //
-// - Legends:
+// - Parameters:
 // table_element_1: The first element, to which we compare the other element (CALLED AS FIRST ELEMENT)
 // table_element_2: The second element, which is compared to the first one (CALLED AS SECOND ELEMENT)
-std::map<int, std::vector<std::string>> ClusterStep(std::map<int, std::vector<std::string>> clustered_groups,
+std::map<int, std::vector<std::string>> ClusterStep(std::map<int, std::vector<std::string>> clusters,
                                                     std::pair<std::string,double> table_element_1,
                                                     std::pair<std::string,double> table_element_2)
 {
-
     // Iterator for the map structure
     std::map<int, std::vector<std::string>>::iterator map_iterator_main;
     std::map<int, std::vector<std::string>>::iterator map_iterator_sub_1;
@@ -256,12 +279,13 @@ std::map<int, std::vector<std::string>> ClusterStep(std::map<int, std::vector<st
     int temp_strorage_search;
 
     // Bool indicator for various purpose
-    int indicator_main = 0;
-    int indicator = 0;
+    int indicator_first = 0;
+    int indicator_second = 0;
 
     //std::cout << "INFORMATIVE MESSAGE: Check is now executed between tile " << table_element_1.first << " and " << table_element_2.first << std::endl;
 
-    if(clustered_groups.size() == 0)
+    // Put the very first two elements into the first cluster
+    if(clusters.size() == 0)
     {
         // Increment the counter for the number of clusters to 1
         n_clusters = 1;
@@ -270,7 +294,7 @@ std::map<int, std::vector<std::string>> ClusterStep(std::map<int, std::vector<st
         std::vector<std::string> temp_storage = {table_element_1.first, table_element_2.first};
 
         // Put them insode the std::map structure as first entries
-        clustered_groups[n_clusters] = temp_storage;
+        clusters[n_clusters] = temp_storage;
 
         // Clear the temporary storage
         temp_storage.clear();
@@ -279,16 +303,16 @@ std::map<int, std::vector<std::string>> ClusterStep(std::map<int, std::vector<st
     else
     {
         // Run through the vectors respect to them keys in the std::map structure
-        for(map_iterator_main = clustered_groups.begin(); map_iterator_main != clustered_groups.end(); ++map_iterator_main)
+        for(map_iterator_main = clusters.begin(); map_iterator_main != clusters.end(); ++map_iterator_main)
         {
             // Activates if the first element is already inside one of the vectors in the std::map structure
             // Particularly in the map_iterator# group
             if(std::find(map_iterator_main->second.begin(), map_iterator_main->second.end(), table_element_1.first) != map_iterator_main->second.end())
             {
                 // Indicates that the first element is found
-                indicator_main = 1;
+                indicator_first = 1;
 
-                for(map_iterator_sub_1 = clustered_groups.begin(); map_iterator_sub_1 != clustered_groups.end(); ++map_iterator_sub_1)
+                for(map_iterator_sub_1 = clusters.begin(); map_iterator_sub_1 != clusters.end(); ++map_iterator_sub_1)
                 {
                     // Check if the second element is inside any of the std::map's entries
                     // indicator indicates if second element is found
@@ -297,70 +321,70 @@ std::map<int, std::vector<std::string>> ClusterStep(std::map<int, std::vector<st
                         // If the second element is already inside the SAME group, then everything is all right, do nothing
                         if(map_iterator_sub_1->first == map_iterator_main->first)
                         {
-                            indicator = 1;
+                            indicator_second = 1;
                             break;
                         }
 
-                        // If they aren't, then merge the two group, and refresh the 'clustered_groups' map's keys
+                        // If they aren't, then merge the two group, and refresh the 'clusters' map's keys
                         else
                         {
                             if(map_iterator_sub_1->first > map_iterator_main->first)
                             {
-                                clustered_groups[map_iterator_main->first].insert(clustered_groups[map_iterator_main->first].end(),
-                                                                                  clustered_groups[map_iterator_sub_1->first].begin(),
-                                                                                  clustered_groups[map_iterator_sub_1->first].end());
+                                clusters[map_iterator_main->first].insert(clusters[map_iterator_main->first].end(),
+                                                                                  clusters[map_iterator_sub_1->first].begin(),
+                                                                                  clusters[map_iterator_sub_1->first].end());
                                 temp_storage_erase = map_iterator_sub_1->first;
-                                clustered_groups.erase(map_iterator_sub_1->first);
-                                indicator = 1;
+                                clusters.erase(map_iterator_sub_1->first);
+                                indicator_second = 1;
                                 break;
                             }
 
                             else if(map_iterator_sub_1->first < map_iterator_main->first)
                             {
-                                clustered_groups[map_iterator_sub_1->first].insert(clustered_groups[map_iterator_sub_1->first].end(),
-                                                                                   clustered_groups[map_iterator_main->first].begin(),
-                                                                                   clustered_groups[map_iterator_main->first].end());
+                                clusters[map_iterator_sub_1->first].insert(clusters[map_iterator_sub_1->first].end(),
+                                                                                   clusters[map_iterator_main->first].begin(),
+                                                                                   clusters[map_iterator_main->first].end());
                                 temp_storage_erase = map_iterator_main->first;
-                                clustered_groups.erase(map_iterator_main->first);
-                                indicator = 1;
+                                clusters.erase(map_iterator_main->first);
+                                indicator_second = 1;
                                 break;
                             }
                         }
                     }
                 }
 
-                // If the second element isn't in any group, then put it into there, where the first one is
-                if(indicator == 0)
+                // If the second element isn't in any group, then put it there, where the first one is
+                if(indicator_second == 0)
                 {
-                    clustered_groups[map_iterator_main->first].push_back(table_element_2.first);
+                    clusters[map_iterator_main->first].push_back(table_element_2.first);
                     break;
                 }
 
                 else
                 {
-                    indicator = 0;
+                    indicator_second = 0;
                     break;
                 }
             }
         }
 
         // What if the first element isn't inside a group?
-        if(indicator_main == 0)
+        if(indicator_first == 0)
         {
             // Check if the second element is already contained by a group
-            for(map_iterator_sub_2 = clustered_groups.begin(); map_iterator_sub_2 != clustered_groups.end(); ++map_iterator_sub_2)
+            for(map_iterator_sub_2 = clusters.begin(); map_iterator_sub_2 != clusters.end(); ++map_iterator_sub_2)
             {
                 // If it is, then insert the first element into that too
                 if(std::find(map_iterator_sub_2->second.begin(), map_iterator_sub_2->second.end(), table_element_2.first) != map_iterator_sub_2->second.end())
                 {
-                    clustered_groups[map_iterator_sub_2->first].push_back(table_element_1.first);
-                    indicator = 1;
+                    clusters[map_iterator_sub_2->first].push_back(table_element_1.first);
+                    indicator_second = 1;
                     break;
                 }
             }
 
             // If none of them is inside a group, then create a new group
-            if(indicator == 0)
+            if(indicator_second == 0)
             {
                 // Increment the counter for the number of the cluster groups
                 int *temp_n_clusers;
@@ -369,7 +393,7 @@ std::map<int, std::vector<std::string>> ClusterStep(std::map<int, std::vector<st
 
                 std::vector<std::string> temp_storage = {table_element_1.first, table_element_2.first};
 
-                clustered_groups[n_clusters] = temp_storage;
+                clusters[n_clusters] = temp_storage;
 
                 temp_storage.clear();
             }
@@ -378,28 +402,28 @@ std::map<int, std::vector<std::string>> ClusterStep(std::map<int, std::vector<st
 
     if(temp_storage_erase != -1)
     {
-        for(map_iterator_main = clustered_groups.begin(); map_iterator_main != clustered_groups.end(); ++map_iterator_main)
+        for(map_iterator_main = clusters.begin(); map_iterator_main != clusters.end(); ++map_iterator_main)
         {
             temp_strorage_search = temp_storage_erase + 1;
             if(map_iterator_main->first == temp_strorage_search)
             {
-                clustered_groups[temp_storage_erase] = clustered_groups[temp_strorage_search];
-                clustered_groups.erase(temp_strorage_search);
+                clusters[temp_storage_erase] = clusters[temp_strorage_search];
+                clusters.erase(temp_strorage_search);
                 ++temp_storage_erase;
             }
         }
         temp_storage_erase = -1;
     }
 
-    //std::cout << "Elapsed time: " << (std::clock() - StartTime) / (double)(CLOCKS_PER_SEC / 1000) << " ms\n" << std::endl;
-
-    return(clustered_groups);
+    return(clusters);
 }
 
 // Frame for the basic check in an individual step of the clustering
 // For every tile, we need to do (at least) the following two step
 // The X-s indicates, which elements are compared around the middle one
-std::map<int, std::vector<std::string>> BasicClusterFrame(std::map<int, std::vector<std::string>> clustered_groups, std::vector<std::pair<std::string,double>> table, int rows, int columns, int i, int j, double dx)
+std::map<int, std::vector<std::string>> BasicClusterFrame(std::map<int, std::vector<std::string>> clusters,
+                                                          std::vector<std::pair<std::string, double>> table,
+                                                          int rows, int columns, int i, int j, double dx)
 {
     std::pair<std::string,double> table_element_1;
     std::pair<std::string,double> table_element_2;
@@ -407,24 +431,30 @@ std::map<int, std::vector<std::string>> BasicClusterFrame(std::map<int, std::vec
     //  O.O.O
     //  O.X.O
     //  O.X.O
-    if((table[(i + 1) * columns + j].second < table[i * columns + j].second + dx) && (table[(i + 1) * columns + j].second > table[i * columns + j].second - dx))
+    if((table[(i + 1) * columns + j].second < table[i * columns + j].second + dx)
+       &&
+       (table[(i + 1) * columns + j].second > table[i * columns + j].second - dx)
+      )
     {
         table_element_1 = table[i * columns + j];
         table_element_2 = table[(i + 1) * columns + j];
-        clustered_groups = ClusterStep(clustered_groups, table_element_1, table_element_2);
+        clusters = ClusterStep(clusters, table_element_1, table_element_2);
     }
 
     //  O.O.O
     //  O.X.X
     //  O.O.O
-    if((table[i * columns + (j + 1)].second < table[i * columns + j].second + dx) && (table[i * columns + (j + 1)].second > table[i * columns + j].second - dx))
+    if((table[i * columns + (j + 1)].second < table[i * columns + j].second + dx)
+       &&
+       (table[i * columns + (j + 1)].second > table[i * columns + j].second - dx)
+      )
     {
         table_element_1 = table[i * columns + j];
         table_element_2 = table[i * columns + (j + 1)];
-        clustered_groups = ClusterStep(clustered_groups, table_element_1, table_element_2);
+        clusters = ClusterStep(clusters, table_element_1, table_element_2);
     }
 
-    return(clustered_groups);
+    return(clusters);
 
 }
 
@@ -434,7 +464,9 @@ std::map<int, std::vector<std::string>> BasicClusterFrame(std::map<int, std::vec
 // O.O.O.O.O.O.O
 // O.O.O.O.O.O.O
 // O.O.O.O.O.O.O
-std::map<int, std::vector<std::string>> UppermostBarClusterFrame(std::map<int, std::vector<std::string>> clustered_groups, std::vector<std::pair<std::string,double>> table, int rows, int columns, int i, int j, double dx)
+std::map<int, std::vector<std::string>> UppermostBarClusterFrame(std::map<int, std::vector<std::string>> clusters,
+                                                                 std::vector<std::pair<std::string, double>> table,
+                                                                 int rows, int columns, int i, int j, double dx)
 {
     std::pair<std::string,double> table_element_1;
     std::pair<std::string,double> table_element_2;
@@ -443,25 +475,31 @@ std::map<int, std::vector<std::string>> UppermostBarClusterFrame(std::map<int, s
     //  O.X.O
     //  O.X.O
     //  O.O.O
-    if((table[(i - 1) * columns + j].second < table[i * columns + j].second + dx) && (table[(i - 1) * columns + j].second > table[i * columns + j].second - dx))
+    if((table[(i - 1) * columns + j].second < table[i * columns + j].second + dx)
+       &&
+       (table[(i - 1) * columns + j].second > table[i * columns + j].second - dx)
+      )
     {
         table_element_1 = table[i * columns + j];
         table_element_2 = table[(i - 1) * columns + j];
-        clustered_groups = ClusterStep(clustered_groups, table_element_1, table_element_2);
+        clusters = ClusterStep(clusters, table_element_1, table_element_2);
     }
 
     // Activates if the element in the cell (i-1)(j+1)# (here 1-3) is in the radii criterium compared to the (i-1)j# (here 1-2) element
     //  O.X.X
     //  O.O.O
     //  O.O.O
-    if((table[(i - 1) * columns + (j + 1)].second < table[(i - 1) * columns + j].second + dx) && (table[(i - 1) * columns + (j + 1)].second > table[(i - 1) * columns + j].second - dx))
+    if((table[(i - 1) * columns + (j + 1)].second < table[(i - 1) * columns + j].second + dx)
+       &&
+       (table[(i - 1) * columns + (j + 1)].second > table[(i - 1) * columns + j].second - dx)
+      )
     {
         table_element_1 = table[(i - 1) * columns + j];
         table_element_2 = table[(i - 1) * columns + (j + 1)];
-        clustered_groups = ClusterStep(clustered_groups, table_element_1, table_element_2);
+        clusters = ClusterStep(clusters, table_element_1, table_element_2);
     }
 
-    return(clustered_groups);
+    return(clusters);
 }
 
 // Function for the leftmost bar of tiles
@@ -471,7 +509,9 @@ std::map<int, std::vector<std::string>> UppermostBarClusterFrame(std::map<int, s
 // X.O.O.O
 // X.O.O.O
 // O.O.O.O
-std::map<int, std::vector<std::string>> LeftmostBarClusterFrame(std::map<int, std::vector<std::string>> clustered_groups, std::vector<std::pair<std::string,double>> table, int rows, int columns, int i, int j, double dx)
+std::map<int, std::vector<std::string>> LeftmostBarClusterFrame(std::map<int, std::vector<std::string>> clusters,
+                                                                std::vector<std::pair<std::string, double>> table,
+                                                                int rows, int columns, int i, int j, double dx)
 {
     std::pair<std::string,double> table_element_1;
     std::pair<std::string,double> table_element_2;
@@ -480,25 +520,31 @@ std::map<int, std::vector<std::string>> LeftmostBarClusterFrame(std::map<int, st
     //  O.O.O
     //  X.X.O
     //  O.O.O
-    if((table[i * columns + (j - 1)].second < table[i * columns + j].second + dx) && (table[i * columns + (j - 1)].second > table[i * columns + j].second - dx))
+    if((table[i * columns + (j - 1)].second < table[i * columns + j].second + dx)
+       &&
+       (table[i * columns + (j - 1)].second > table[i * columns + j].second - dx)
+      )
     {
         table_element_1 = table[i * columns + (j - 1)];
         table_element_2 = table[i * columns + j];
-        clustered_groups = ClusterStep(clustered_groups, table_element_1, table_element_2);
+        clusters = ClusterStep(clusters, table_element_1, table_element_2);
     }
 
     // Activates if the element in the cell (i+1)(j-1)# (here 3-1) is in the radii criterium compared to the i(j-1)# (here 2-1) element
     //  O.O.O
     //  X.O.O
     //  X.O.O
-    if((table[(i + 1) * columns + (j - 1)].second < table[i * columns + (j - 1)].second + dx) && (table[(i + 1) * columns + (j - 1)].second > table[i * columns + (j - 1)].second - dx))
+    if((table[(i + 1) * columns + (j - 1)].second < table[i * columns + (j - 1)].second + dx)
+       &&
+       (table[(i + 1) * columns + (j - 1)].second > table[i * columns + (j - 1)].second - dx)
+      )
     {
         table_element_1 = table[i * columns + (j - 1)];
         table_element_2 = table[(i + 1) * columns + (j - 1)];
-        clustered_groups = ClusterStep(clustered_groups, table_element_1, table_element_2);
+        clusters = ClusterStep(clusters, table_element_1, table_element_2);
     }
 
-    return(clustered_groups);
+    return(clusters);
 }
 
 // Function for the rightmost bar of tiles
@@ -508,7 +554,9 @@ std::map<int, std::vector<std::string>> LeftmostBarClusterFrame(std::map<int, st
 // O.O.O.X
 // O.O.O.X
 // O.O.O.O
-std::map<int, std::vector<std::string>> RightmostBarClusterFrame(std::map<int, std::vector<std::string>> clustered_groups, std::vector<std::pair<std::string,double>> table, int rows, int columns, int i, int j, double dx)
+std::map<int, std::vector<std::string>> RightmostBarClusterFrame(std::map<int, std::vector<std::string>> clusters,
+                                                                 std::vector<std::pair<std::string, double>> table,
+                                                                 int rows, int columns, int i, int j, double dx)
 {
     std::pair<std::string,double> table_element_1;
     std::pair<std::string,double> table_element_2;
@@ -517,14 +565,17 @@ std::map<int, std::vector<std::string>> RightmostBarClusterFrame(std::map<int, s
     //  O.O.O
     //  O.O.X
     //  O.O.X
-    if((table[(i + 1) * columns + (j + 1)].second < table[i * columns + (j + 1)].second + dx) && (table[(i + 1) * columns + (j + 1)].second > table[i * columns + (j + 1)].second - dx))
+    if((table[(i + 1) * columns + (j + 1)].second < table[i * columns + (j + 1)].second + dx)
+       &&
+       (table[(i + 1) * columns + (j + 1)].second > table[i * columns + (j + 1)].second - dx)
+      )
     {
         table_element_1 = table[i * columns + (j + 1)];
         table_element_2 = table[(i + 1) * columns + (j + 1)];
-        clustered_groups = ClusterStep(clustered_groups, table_element_1, table_element_2);
+        clusters = ClusterStep(clusters, table_element_1, table_element_2);
     }
 
-    return(clustered_groups);
+    return(clusters);
 }
 
 // Function for the bottommost bar of tiles
@@ -532,7 +583,9 @@ std::map<int, std::vector<std::string>> RightmostBarClusterFrame(std::map<int, s
 // O.O.O.O.O.O.O
 // O.O.O.O.O.O.O
 // O.X.X.X.X.X.O
-std::map<int, std::vector<std::string>> BottommostBarClusterFrame(std::map<int, std::vector<std::string>> clustered_groups, std::vector<std::pair<std::string,double>> table, int rows, int columns, int i, int j, double dx)
+std::map<int, std::vector<std::string>> BottommostBarClusterFrame(std::map<int, std::vector<std::string>> clusters,
+                                                                  std::vector<std::pair<std::string, double>> table,
+                                                                  int rows, int columns, int i, int j, double dx)
 {
     std::pair<std::string,double> table_element_1;
     std::pair<std::string,double> table_element_2;
@@ -541,21 +594,25 @@ std::map<int, std::vector<std::string>> BottommostBarClusterFrame(std::map<int, 
     //  O.O.O
     //  O.O.O
     //  O.X.X
-    if((table[(i + 1) * columns + (j + 1)].second < table[(i + 1) * columns + j].second + dx) && (table[(i + 1) * columns + (j + 1)].second > table[(i + 1) * columns + j].second - dx))
+    if((table[(i + 1) * columns + (j + 1)].second < table[(i + 1) * columns + j].second + dx)
+       &&
+       (table[(i + 1) * columns + (j + 1)].second > table[(i + 1) * columns + j].second - dx)
+      )
     {
         table_element_1 = table[(i + 1) * columns + j];
         table_element_2 = table[(i + 1) * columns + (j + 1)];
-        clustered_groups = ClusterStep(clustered_groups, table_element_1, table_element_2);
+        clusters = ClusterStep(clusters, table_element_1, table_element_2);
     }
 
-    return(clustered_groups);
+    return(clusters);
 }
 
 // Brute force solution frame
-std::map<int, std::vector<std::string>> ClusteringBruteForce(std::vector<std::pair<std::string,double>> table, int rows, int columns, double dx)
+std::map<int, std::vector<std::string>> ClusteringBruteForce(std::vector<std::pair<std::string, double>> table,
+                                                             int rows, int columns, double dx)
 {
     // Container for the actual clusters
-    std::map<int, std::vector<std::string>> clustered_groups;
+    std::map<int, std::vector<std::string>> clusters;
 
     // Tomporary containers for the std::pairs of the table 
     std::pair<std::string,double> table_element_1;
@@ -579,76 +636,91 @@ std::map<int, std::vector<std::string>> ClusteringBruteForce(std::vector<std::pa
     // O.O.O.O.O.O.O
     // O.X.O.O.O.X.O
     // O.O.O.O.O.O.O
-    
+
     // 1./a
     // UPPER LEFT corner
     i = 1;
     j = 1;
 
-    clustered_groups = BasicClusterFrame(clustered_groups, table, rows, columns, i, j, dx);
-    clustered_groups = UppermostBarClusterFrame(clustered_groups, table, rows, columns, i, j, dx);
-    clustered_groups = LeftmostBarClusterFrame(clustered_groups, table, rows, columns, i, j, dx);
+    clusters = BasicClusterFrame(clusters, table, rows, columns, i, j, dx);
+    clusters = UppermostBarClusterFrame(clusters, table, rows, columns, i, j, dx);
+    clusters = LeftmostBarClusterFrame(clusters, table, rows, columns, i, j, dx);
 
     // Activates if the element in the UPPER LEFT corner (here 0-0) is in the radii criterium compared to the (i-1)j# (here 0-1) element
     //  X.X.O
     //  O.O.O
     //  O.O.O
-    if((table[(i - 1) * columns + (j - 1)].second < table[(i - 1) * columns + j].second + dx) && (table[(i - 1) * columns + (j - 1)].second > table[(i - 1) * columns + j].second - dx))
+    if((table[(i - 1) * columns + (j - 1)].second < table[(i - 1) * columns + j].second + dx)
+       &&
+       (table[(i - 1) * columns + (j - 1)].second > table[(i - 1) * columns + j].second - dx)
+      )
     {
         table_element_1 = table[(i - 1) * columns + j];
         table_element_2 = table[(i - 1) * columns + (j - 1)];
-        clustered_groups = ClusterStep(clustered_groups, table_element_1, table_element_2);
+        clusters = ClusterStep(clusters, table_element_1, table_element_2);
     }
 
     // Activates if the element in the UPPER LEFT corner (here 0-0) is in the radii criterium compared to the i(j-1)# (here 1-0) element
     //  X.O.O
     //  X.O.O
     //  O.O.O
-    if((table[(i - 1) * columns + (j - 1)].second < table[i * columns + (j - 1)].second + dx) && (table[(i - 1) * columns + (j - 1)].second > table[i * columns + (j - 1)].second - dx))
+    if((table[(i - 1) * columns + (j - 1)].second < table[i * columns + (j - 1)].second + dx)
+       &&
+       (table[(i - 1) * columns + (j - 1)].second > table[i * columns + (j - 1)].second - dx)
+      )
     {
         table_element_1 = table[i * columns + (j - 1)];
         table_element_2 = table[(i - 1) * columns + (j - 1)];
-        clustered_groups = ClusterStep(clustered_groups, table_element_1, table_element_2);
+        clusters = ClusterStep(clusters, table_element_1, table_element_2);
     }
 
     // 1./b
     // UPPER RIGHT corner
     i = 1;
     j = columns - 2;
-    clustered_groups = BasicClusterFrame(clustered_groups, table, rows, columns, i, j, dx);
-    clustered_groups = RightmostBarClusterFrame(clustered_groups, table, rows, columns, i, j, dx);
+    clusters = BasicClusterFrame(clusters, table, rows, columns, i, j, dx);
+    clusters = RightmostBarClusterFrame(clusters, table, rows, columns, i, j, dx);
 
     // Activates if the element in the cell (i-1)j# (here 0-(columns - 2)) is in the radii criterium compared to the ij# (here 1-(Cols - 2)) element
     //  O.X.O
     //  O.X.O
     //  O.O.O
-    if((table[(i - 1) * columns + j].second < table[i * columns + j].second + dx) && (table[(i - 1) * columns + j].second > table[i * columns + j].second - dx))
+    if((table[(i - 1) * columns + j].second < table[i * columns + j].second + dx)
+       &&
+       (table[(i - 1) * columns + j].second > table[i * columns + j].second - dx)
+      )
     {
         table_element_1 = table[i * columns + j];
         table_element_2 = table[(i - 1) * columns + j];
-        clustered_groups = ClusterStep(clustered_groups, table_element_1, table_element_2);
+        clusters = ClusterStep(clusters, table_element_1, table_element_2);
     }
 
     // Activates if the element in the UPPER RIGHT corner (here 0-(Cols - 1)) is in the radii criterium compared to the i(j+1)# (here 1-(Cols - 1)) element
     //  O.O.X
     //  O.O.X
     //  O.O.O
-    if((table[(i - 1) * columns + (j + 1)].second < table[i * columns + (j + 1)].second + dx) && (table[(i - 1) * columns + (j + 1)].second > table[i * columns + (j + 1)].second - dx))
+    if((table[(i - 1) * columns + (j + 1)].second < table[i * columns + (j + 1)].second + dx)
+       &&
+       (table[(i - 1) * columns + (j + 1)].second > table[i * columns + (j + 1)].second - dx)
+      )
     {
         table_element_1 = table[i * columns + (j + 1)];
         table_element_2 = table[(i - 1) * columns + (j + 1)];
-        clustered_groups = ClusterStep(clustered_groups, table_element_1, table_element_2);
+        clusters = ClusterStep(clusters, table_element_1, table_element_2);
     }
 
     // Activates if the element in the UPPER RIGHT corner (here 0-(Cols - 1)) is in the radii criterium compared to the (i-1)j# (here 0-(Cols - 2)) element
     //  O.X.X
     //  O.O.O
     //  O.O.O
-    if((table[(i - 1) * columns + (j + 1)].second < table[(i - 1) * columns + j].second + dx) && (table[(i - 1) * columns + (j + 1)].second > table[(i - 1) * columns + j].second - dx))
+    if((table[(i - 1) * columns + (j + 1)].second < table[(i - 1) * columns + j].second + dx)
+       &&
+       (table[(i - 1) * columns + (j + 1)].second > table[(i - 1) * columns + j].second - dx)
+      )
     {
         table_element_1 = table[(i - 1) * columns + j];
         table_element_2 = table[(i - 1) * columns + (j + 1)];
-        clustered_groups = ClusterStep(clustered_groups, table_element_1, table_element_2);
+        clusters = ClusterStep(clusters, table_element_1, table_element_2);
     }
 
     // 1./c
@@ -656,40 +728,49 @@ std::map<int, std::vector<std::string>> ClusteringBruteForce(std::vector<std::pa
     i = rows - 2;
     j = 1;
 
-    clustered_groups = BasicClusterFrame(clustered_groups, table, rows, columns, i, j, dx);
-    clustered_groups = BottommostBarClusterFrame(clustered_groups, table, rows, columns, i, j, dx);
+    clusters = BasicClusterFrame(clusters, table, rows, columns, i, j, dx);
+    clusters = BottommostBarClusterFrame(clusters, table, rows, columns, i, j, dx);
     
     // Activates if the element in the cell (here (rows - 2)-0)# is in the radii criterium compared to the ij# (here (rows - 2)-1) element
     //  O.O.O
     //  X.X.O
     //  O.O.O
-    if((table[i * columns + (j - 1)].second < table[i * columns + j].second + dx) && (table[(i + 1) * columns + (j - 1)].second > table[i * columns + j].second - dx))
+    if((table[i * columns + (j - 1)].second < table[i * columns + j].second + dx)
+       &&
+       (table[(i + 1) * columns + (j - 1)].second > table[i * columns + j].second - dx)
+      )
     {
         table_element_1 = table[i * columns + j];
         table_element_2 = table[i * columns + (j - 1)];
-        clustered_groups = ClusterStep(clustered_groups, table_element_1, table_element_2);
+        clusters = ClusterStep(clusters, table_element_1, table_element_2);
     }
 
     // Activates if the element in the BOTTOM LEFT corner (here (rows - 1)-0) is in the radii criterium compared to the (i+1)j# (here (rows - 1)-1) element
     //  O.O.O
     //  O.O.O
     //  X.X.O
-    if((table[(i + 1) * columns + (j - 1)].second < table[(i + 1) * columns + j].second + dx) && (table[(i + 1) * columns + (j - 1)].second > table[(i + 1) * columns + j].second - dx))
+    if((table[(i + 1) * columns + (j - 1)].second < table[(i + 1) * columns + j].second + dx)
+       &&
+       (table[(i + 1) * columns + (j - 1)].second > table[(i + 1) * columns + j].second - dx)
+      )
     {
         table_element_1 = table[(i + 1) * columns + j];
         table_element_2 = table[(i + 1) * columns + (j - 1)];
-        clustered_groups = ClusterStep(clustered_groups, table_element_1, table_element_2);
+        clusters = ClusterStep(clusters, table_element_1, table_element_2);
     }
 
     // Activates if the element in the BOTTOM LEFT corner (here (rows - 1)-0) is in the radii criterium compared to the i(j-1)# (here (rows - 2)-0) element
     //  O.O.O
     //  X.O.O
     //  X.O.O
-    if((table[(i + 1) * columns + (j - 1)].second < table[i * columns + (j - 1)].second + dx) && (table[(i + 1) * columns + (j - 1)].second > table[i * columns + (j - 1)].second - dx))
+    if((table[(i + 1) * columns + (j - 1)].second < table[i * columns + (j - 1)].second + dx)
+       &&
+       (table[(i + 1) * columns + (j - 1)].second > table[i * columns + (j - 1)].second - dx)
+      )
     {
         table_element_1 = table[i * columns + (j - 1)];
         table_element_2 = table[(i + 1) * columns + (j - 1)];
-        clustered_groups = ClusterStep(clustered_groups, table_element_1, table_element_2);
+        clusters = ClusterStep(clusters, table_element_1, table_element_2);
     }
 
     // 1./d
@@ -697,28 +778,34 @@ std::map<int, std::vector<std::string>> ClusteringBruteForce(std::vector<std::pa
     i = rows - 2;
     j = columns - 2;
 
-    clustered_groups = BasicClusterFrame(clustered_groups, table, rows, columns, i, j, dx);
+    clusters = BasicClusterFrame(clusters, table, rows, columns, i, j, dx);
                 
     // Activates if the element in the BOTTOM RIGHT corner (here rows-columns) is in the radii criterium compared to the (i+1)j# (here (rows - 1)-(columns - 2)) element
     //  O.O.O
     //  O.O.O
     //  O.X.X
-    if((table[(i + 1) * columns + (j + 1)].second < table[(i + 1) * columns + j].second + dx) && (table[(i + 1) * columns + (j + 1)].second > table[(i + 1) * columns + j].second - dx))
+    if((table[(i + 1) * columns + (j + 1)].second < table[(i + 1) * columns + j].second + dx)
+       &&
+       (table[(i + 1) * columns + (j + 1)].second > table[(i + 1) * columns + j].second - dx)
+      )
     {
         table_element_1 = table[(i + 1) * columns + j];
         table_element_2 = table[(i + 1) * columns + (j + 1)];
-        clustered_groups = ClusterStep(clustered_groups, table_element_1, table_element_2);
+        clusters = ClusterStep(clusters, table_element_1, table_element_2);
     }
 
     // Activates if the element in the BOTTOM RIGHT corner (here rows-columns) is in the radii criterium compared to the i(j+1)# (here (rows - 2)-(columns - 1)) element
     //  O.O.O
     //  O.O.X
     //  O.O.X
-    if((table[(i + 1) * columns + (j + 1)].second < table[i * columns + (j + 1)].second + dx) && (table[(i + 1) * columns + (j + 1)].second > table[i * columns + (j + 1)].second - dx))
+    if((table[(i + 1) * columns + (j + 1)].second < table[i * columns + (j + 1)].second + dx)
+       &&
+       (table[(i + 1) * columns + (j + 1)].second > table[i * columns + (j + 1)].second - dx)
+      )
     {
         table_element_1 = table[i * columns + (j + 1)];
         table_element_2 = table[(i + 1) * columns + (j + 1)];
-        clustered_groups = ClusterStep(clustered_groups, table_element_1, table_element_2);
+        clusters = ClusterStep(clusters, table_element_1, table_element_2);
     }
 
     // STEP 2.
@@ -741,8 +828,8 @@ std::map<int, std::vector<std::string>> ClusteringBruteForce(std::vector<std::pa
     i = 1;
     for(int j = 2; j <= columns - 3; j++)
     {
-        clustered_groups = BasicClusterFrame(clustered_groups, table, rows, columns, i, j, dx);
-        clustered_groups = UppermostBarClusterFrame(clustered_groups, table, rows, columns, i, j, dx);
+        clusters = BasicClusterFrame(clusters, table, rows, columns, i, j, dx);
+        clusters = UppermostBarClusterFrame(clusters, table, rows, columns, i, j, dx);
     }
 
     // 2./b
@@ -756,8 +843,8 @@ std::map<int, std::vector<std::string>> ClusteringBruteForce(std::vector<std::pa
     i = rows - 2;
     for(int j = 2; j <= columns - 3; j++)
     {
-        clustered_groups = BasicClusterFrame(clustered_groups, table, rows, columns, i, j, dx);
-        clustered_groups = BottommostBarClusterFrame(clustered_groups, table, rows, columns, i, j, dx);
+        clusters = BasicClusterFrame(clusters, table, rows, columns, i, j, dx);
+        clusters = BottommostBarClusterFrame(clusters, table, rows, columns, i, j, dx);
     }
 
     // 2./c
@@ -771,8 +858,8 @@ std::map<int, std::vector<std::string>> ClusteringBruteForce(std::vector<std::pa
     j = 1;
     for(i = 2; i <= rows - 3; i++)
     {
-        clustered_groups = BasicClusterFrame(clustered_groups, table, rows, columns, i, j, dx);
-        clustered_groups = LeftmostBarClusterFrame(clustered_groups, table, rows, columns, i, j, dx);
+        clusters = BasicClusterFrame(clusters, table, rows, columns, i, j, dx);
+        clusters = LeftmostBarClusterFrame(clusters, table, rows, columns, i, j, dx);
     }
 
     // 2./d
@@ -786,8 +873,8 @@ std::map<int, std::vector<std::string>> ClusteringBruteForce(std::vector<std::pa
     j = columns - 2;
     for(i = 2; i <= rows - 3; i++)
     {
-        clustered_groups = BasicClusterFrame(clustered_groups, table, rows, columns, i, j, dx);
-        clustered_groups = RightmostBarClusterFrame(clustered_groups, table, rows, columns, i, j, dx);
+        clusters = BasicClusterFrame(clusters, table, rows, columns, i, j, dx);
+        clusters = RightmostBarClusterFrame(clusters, table, rows, columns, i, j, dx);
     }
 
     // STEP 3.
@@ -803,18 +890,18 @@ std::map<int, std::vector<std::string>> ClusteringBruteForce(std::vector<std::pa
         for(int j = 2; j <= columns - 3; j++)
         {
             // Basic step in the clustering, needed for every step
-            clustered_groups = BasicClusterFrame(clustered_groups, table, rows, columns, i, j, dx);
+            clusters = BasicClusterFrame(clusters, table, rows, columns, i, j, dx);
         }
     }
 
-    return clustered_groups;
+    return clusters;
 }
 
 
 // ####### 3. WRITE DATA INTO FILE #######
 
-void write_to_file(std::vector<std::pair<std::string,double>> table, int rows, int columns,
-                   std::map<int, std::vector<std::string>> clustered_groups)
+void write_to_file(std::vector<std::pair<std::string, double>> table, int rows, int columns,
+                   std::map<int, std::vector<std::string>> clusters)
 {
     std::ofstream output_file;
 
@@ -844,7 +931,7 @@ void write_to_file(std::vector<std::pair<std::string,double>> table, int rows, i
     // Write a header for the output file
     output_file << "Indeces of clusters\tElements of clusters" << std::endl;
     // Write the clusters' data into the file
-    for(map_iterator = clustered_groups.begin(); map_iterator != clustered_groups.end(); ++map_iterator)
+    for(map_iterator = clusters.begin(); map_iterator != clusters.end(); ++map_iterator)
     {
         output_file << "cluster_" << map_iterator->first << "\t[[";
         for(string_vector_iterator = map_iterator->second.begin(); string_vector_iterator != map_iterator->second.end(); ++string_vector_iterator)
@@ -873,7 +960,7 @@ int main()
     // Measuring time for generating data table begin
     auto time_begin_gen = std::chrono::high_resolution_clock::now();
     // Generate a 2D table with random floats, valued between 0 and a choosen number
-    std::vector<std::pair<std::string,double>> table = gen_2d_table(rows, columns, max_element);
+    std::vector<std::pair<std::string, double>> table = gen_2d_table(rows, columns, max_element);
     std::cout << "INFORMATIVE MESSAGE: The data table has been created!\n" << std::endl;
     // Random 2D matrix genereation runtime
     auto time_end_gen = std::chrono::high_resolution_clock::now() - time_begin_gen;
@@ -882,31 +969,21 @@ int main()
     //PrintElements(table, rows, columns);
 
     // Define the clustered map first
-    std::map<int, std::vector<std::string>> clustered_groups;
+    std::map<int, std::vector<std::string>> clusters;
 
     // NATIVE BRUTEFORCE
     // Measuring time for bruteforce clustering begin
     auto time_begin_cls_nat = std::chrono::high_resolution_clock::now();
     // Cluster with bruteforce method
-    clustered_groups = ClusteringBruteForce(table, rows, columns, dx);
+    clusters = ClusteringBruteForce(table, rows, columns, dx);
     std::cout << "INFORMATIVE MESSAGE: Clustering steps finished!\n" << std::endl;
     // Bruteforce clustering runtime
     auto time_end_cls_nat = std::chrono::high_resolution_clock::now() - time_begin_cls_nat;
 
-    // ASYNC THREADED BRUTEFORCE
-    // Measuring time for bruteforce clustering begin
-    auto time_begin_cls_asy = std::chrono::high_resolution_clock::now();
-    // Cluster with bruteforce method
-    std::future<std::map<int, std::vector<std::string>>> clusering_out = std::async(std::launch::async, ClusteringBruteForce, table, rows, columns, dx);
-    clustered_groups = clusering_out.get();
-    std::cout << "INFORMATIVE MESSAGE: Clustering steps finished!\n" << std::endl;
-    // Bruteforce clustering runtime
-    auto time_end_cls_asy = std::chrono::high_resolution_clock::now() - time_begin_cls_asy;
-
     // Measuring time for writing data begin
     auto time_begin_wrt = std::chrono::high_resolution_clock::now();
     // Write data to output file
-    write_to_file(table, rows, columns, clustered_groups);
+    write_to_file(table, rows, columns, clusters);
     std::cout << "INFORMATIVE MESSAGE: Output file created!\n" << std::endl;
     // Data writing runtime
     auto time_end_wrt = std::chrono::high_resolution_clock::now() - time_begin_wrt;
@@ -917,8 +994,6 @@ int main()
     std::cout << "INFORMATION ABOUT RUNNING TIME" << std::endl;
     std::cout << "Time needed for generating data table: " << std::chrono::duration_cast<std::chrono::microseconds>(time_end_gen).count() << " usec\n";
     std::cout << "Time needed for native bruteforce clustering: " << std::chrono::duration_cast<std::chrono::microseconds>(time_end_cls_nat).count() << " usec\n";
-    std::cout << "Time needed for threaded bruteforce clustering: " << std::chrono::duration_cast<std::chrono::microseconds>(time_end_cls_asy).count() << " usec\n";
     std::cout << "Time needed for writing data into file: " << std::chrono::duration_cast<std::chrono::microseconds>(time_end_wrt).count() << " usec\n";
     std::cout << "Total native runtime: " << std::chrono::duration_cast<std::chrono::microseconds>(time_end_gen + time_end_cls_nat + time_end_wrt).count() << " usec\n";
-    std::cout << "Total threaded runtime: " << std::chrono::duration_cast<std::chrono::microseconds>(time_end_gen + time_end_cls_asy + time_end_wrt).count() << " usec\n";
 }
