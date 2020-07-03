@@ -199,10 +199,10 @@ std::tuple<int, int, double, double> Initialization()
 //
 // Number indicate the following:
 // #ofrows - #ofcolumns
-std::vector<std::pair<std::string,double>> gen_2d_table(int rows, int columns, double max_element)
+std::vector<std::pair<std::pair<int, int>, double>> gen_2d_table(int rows, int columns, double max_element)
 {
-    std::vector<std::pair<std::string, double>> table;
-    std::stringstream pos_idx;
+    std::pair<int, int> pos_idx;
+    std::vector<std::pair<std::pair<int, int>, double>> table;
 
     //Randomize
     std::random_device Randomized;
@@ -213,23 +213,17 @@ std::vector<std::pair<std::string,double>> gen_2d_table(int rows, int columns, d
     {
         for(int j = 1; j <= columns; j++)
         {
-            // Clear stringstream
-            pos_idx.str(std::string());
 
-            // Create a string which indicates the position of the element in the 2D matrix
-            pos_idx << i << "," << j;
-            std::string pos_idx_string = pos_idx.str();
+            // Create a pair which indicates the position of the element in the 2D matrix
+            pos_idx = {i, j};
 
             //Generate a random double
             double random_element = Distribution(Generate);
 
             // Create a pair for the current element in the table:
-            // 1. First element is the string above
+            // 1. First element is the indeces above
             // 2. Second is the actual number in that particular location
-            std::pair<std::string, double> pos_idx_pair;
-
-            pos_idx_pair = std::make_pair(pos_idx_string, random_element);
-            table.push_back(pos_idx_pair);
+            table.push_back(std::make_pair(pos_idx, random_element));
         }
     }
 
@@ -239,7 +233,7 @@ std::vector<std::pair<std::string,double>> gen_2d_table(int rows, int columns, d
 
 // Test
 // Print out the generated 2D data table's elements
-void PrintElements(std::vector<std::pair<std::string, double>> table, int rows, int columns)
+void PrintElements(std::vector<std::pair<std::pair<int,int>, double>> table, int rows, int columns)
 {
     for(int i = 0; i < rows; i++)
     {
@@ -262,17 +256,14 @@ void PrintElements(std::vector<std::pair<std::string, double>> table, int rows, 
 // - Parameters:
 // table_element_1: The first element, to which we compare the other element (CALLED AS FIRST ELEMENT)
 // table_element_2: The second element, which is compared to the first one (CALLED AS SECOND ELEMENT)
-std::map<int, std::vector<std::string>> ClusterStep(std::map<int, std::vector<std::string>> clusters,
-                                                    std::pair<std::string,double> table_element_1,
-                                                    std::pair<std::string,double> table_element_2)
+std::map<int, std::vector<std::pair<int,int>>> ClusterStep(std::map<int, std::vector<std::pair<int,int>>> clusters,
+                                                    std::pair<std::pair<int,int>, double> table_element_1,
+                                                    std::pair<std::pair<int,int>, double> table_element_2)
 {
     // Iterator for the map structure
-    std::map<int, std::vector<std::string>>::iterator map_iterator_main;
-    std::map<int, std::vector<std::string>>::iterator map_iterator_sub_1;
-    std::map<int, std::vector<std::string>>::iterator map_iterator_sub_2;
-
-    // Iterator for the vector structure
-    std::vector<std::string>::iterator string_vector_iterator;
+    std::map<int, std::vector<std::pair<int,int>>>::iterator map_iterator_main;
+    std::map<int, std::vector<std::pair<int,int>>>::iterator map_iterator_sub_1;
+    std::map<int, std::vector<std::pair<int,int>>>::iterator map_iterator_sub_2;
 
     // Temporary storages for specific indeces while iterating through the entries of a map
     int temp_storage_erase = -1;
@@ -291,7 +282,7 @@ std::map<int, std::vector<std::string>> ClusterStep(std::map<int, std::vector<st
         n_clusters = 1;
 
         // Make a temporary storage for the first two cluster element
-        std::vector<std::string> temp_storage = {table_element_1.first, table_element_2.first};
+        std::vector<std::pair<int,int>> temp_storage = {table_element_1.first, table_element_2.first};
 
         // Put them insode the std::map structure as first entries
         clusters[n_clusters] = temp_storage;
@@ -391,7 +382,7 @@ std::map<int, std::vector<std::string>> ClusterStep(std::map<int, std::vector<st
                 temp_n_clusers = &n_clusters;
                 ++*temp_n_clusers;
 
-                std::vector<std::string> temp_storage = {table_element_1.first, table_element_2.first};
+                std::vector<std::pair<int,int>> temp_storage = {table_element_1.first, table_element_2.first};
 
                 clusters[n_clusters] = temp_storage;
 
@@ -421,12 +412,12 @@ std::map<int, std::vector<std::string>> ClusterStep(std::map<int, std::vector<st
 // Frame for the basic check in an individual step of the clustering
 // For every tile, we need to do (at least) the following two step
 // The X-s indicates, which elements are compared around the middle one
-std::map<int, std::vector<std::string>> BasicClusterFrame(std::map<int, std::vector<std::string>> clusters,
-                                                          std::vector<std::pair<std::string, double>> table,
+std::map<int, std::vector<std::pair<int,int>>> BasicClusterFrame(std::map<int, std::vector<std::pair<int,int>>> clusters,
+                                                          std::vector<std::pair<std::pair<int,int>, double>> table,
                                                           int rows, int columns, int i, int j, double dx)
 {
-    std::pair<std::string,double> table_element_1;
-    std::pair<std::string,double> table_element_2;
+    std::pair<std::pair<int,int>, double> table_element_1;
+    std::pair<std::pair<int,int>, double> table_element_2;
 
     //  O.O.O
     //  O.X.O
@@ -464,12 +455,12 @@ std::map<int, std::vector<std::string>> BasicClusterFrame(std::map<int, std::vec
 // O.O.O.O.O.O.O
 // O.O.O.O.O.O.O
 // O.O.O.O.O.O.O
-std::map<int, std::vector<std::string>> UppermostBarClusterFrame(std::map<int, std::vector<std::string>> clusters,
-                                                                 std::vector<std::pair<std::string, double>> table,
+std::map<int, std::vector<std::pair<int,int>>> UppermostBarClusterFrame(std::map<int, std::vector<std::pair<int,int>>> clusters,
+                                                                 std::vector<std::pair<std::pair<int,int>, double>> table,
                                                                  int rows, int columns, int i, int j, double dx)
 {
-    std::pair<std::string,double> table_element_1;
-    std::pair<std::string,double> table_element_2;
+    std::pair<std::pair<int,int>, double> table_element_1;
+    std::pair<std::pair<int,int>, double> table_element_2;
 
     // Activates if the element in the cell (i-1)j# (here 1-2) is in the radii criterium compared to the ij# (here 2-2) element
     //  O.X.O
@@ -509,12 +500,12 @@ std::map<int, std::vector<std::string>> UppermostBarClusterFrame(std::map<int, s
 // X.O.O.O
 // X.O.O.O
 // O.O.O.O
-std::map<int, std::vector<std::string>> LeftmostBarClusterFrame(std::map<int, std::vector<std::string>> clusters,
-                                                                std::vector<std::pair<std::string, double>> table,
+std::map<int, std::vector<std::pair<int,int>>> LeftmostBarClusterFrame(std::map<int, std::vector<std::pair<int,int>>> clusters,
+                                                                std::vector<std::pair<std::pair<int,int>, double>> table,
                                                                 int rows, int columns, int i, int j, double dx)
 {
-    std::pair<std::string,double> table_element_1;
-    std::pair<std::string,double> table_element_2;
+    std::pair<std::pair<int,int>, double> table_element_1;
+    std::pair<std::pair<int,int>, double> table_element_2;
 
     // Activates if the element in the cell i(j-1)# (here 2-1) is in the radii criterium compared to the ij# (here 2-2) element
     //  O.O.O
@@ -554,12 +545,12 @@ std::map<int, std::vector<std::string>> LeftmostBarClusterFrame(std::map<int, st
 // O.O.O.X
 // O.O.O.X
 // O.O.O.O
-std::map<int, std::vector<std::string>> RightmostBarClusterFrame(std::map<int, std::vector<std::string>> clusters,
-                                                                 std::vector<std::pair<std::string, double>> table,
+std::map<int, std::vector<std::pair<int,int>>> RightmostBarClusterFrame(std::map<int, std::vector<std::pair<int,int>>> clusters,
+                                                                 std::vector<std::pair<std::pair<int,int>, double>> table,
                                                                  int rows, int columns, int i, int j, double dx)
 {
-    std::pair<std::string,double> table_element_1;
-    std::pair<std::string,double> table_element_2;
+    std::pair<std::pair<int,int>, double> table_element_1;
+    std::pair<std::pair<int,int>, double> table_element_2;
 
     // Activates if the element in the cell (i+1)(j+1)# is in the radii criterium compared to the i(j+1)# (here 3-(Cols)) element
     //  O.O.O
@@ -583,12 +574,12 @@ std::map<int, std::vector<std::string>> RightmostBarClusterFrame(std::map<int, s
 // O.O.O.O.O.O.O
 // O.O.O.O.O.O.O
 // O.X.X.X.X.X.O
-std::map<int, std::vector<std::string>> BottommostBarClusterFrame(std::map<int, std::vector<std::string>> clusters,
-                                                                  std::vector<std::pair<std::string, double>> table,
+std::map<int, std::vector<std::pair<int,int>>> BottommostBarClusterFrame(std::map<int, std::vector<std::pair<int,int>>> clusters,
+                                                                  std::vector<std::pair<std::pair<int,int>, double>> table,
                                                                   int rows, int columns, int i, int j, double dx)
 {
-    std::pair<std::string,double> table_element_1;
-    std::pair<std::string,double> table_element_2;
+    std::pair<std::pair<int,int>, double> table_element_1;
+    std::pair<std::pair<int,int>, double> table_element_2;
 
     // Activates if the element in the cell (i+1)(j+1)# is in the radii criterium compared to the (i+1)j# element
     //  O.O.O
@@ -608,15 +599,15 @@ std::map<int, std::vector<std::string>> BottommostBarClusterFrame(std::map<int, 
 }
 
 // Brute force solution frame
-std::map<int, std::vector<std::string>> ClusteringBruteForce(std::vector<std::pair<std::string, double>> table,
+std::map<int, std::vector<std::pair<int,int>>> ClusteringBruteForce(std::vector<std::pair<std::pair<int,int>, double>> table,
                                                              int rows, int columns, double dx)
 {
     // Container for the actual clusters
-    std::map<int, std::vector<std::string>> clusters;
+    std::map<int, std::vector<std::pair<int,int>>> clusters;
 
     // Tomporary containers for the std::pairs of the table 
-    std::pair<std::string,double> table_element_1;
-    std::pair<std::string,double> table_element_2;
+    std::pair<std::pair<int,int>, double> table_element_1;
+    std::pair<std::pair<int,int>, double> table_element_2;
 
     // Element indeces
     int i;
@@ -900,8 +891,8 @@ std::map<int, std::vector<std::string>> ClusteringBruteForce(std::vector<std::pa
 
 // ####### 3. WRITE DATA INTO FILE #######
 
-void write_to_file(std::vector<std::pair<std::string, double>> table, int rows, int columns,
-                   std::map<int, std::vector<std::string>> clusters)
+void write_to_file(std::vector<std::pair<std::pair<int,int>, double>> table, int rows, int columns,
+                   std::map<int, std::vector<std::pair<int,int>>> clusters)
 {
     std::ofstream output_file;
 
@@ -920,10 +911,7 @@ void write_to_file(std::vector<std::pair<std::string, double>> table, int rows, 
 
     // 2. Save created clusters
     // Iterator for the map structure
-    std::map<int, std::vector<std::string>>::iterator map_iterator;
-
-    // Iterator for the vector structure
-    std::vector<std::string>::iterator string_vector_iterator;
+    std::map<int, std::vector<std::pair<int,int>>>::iterator map_iterator;
 
     // Make a textfile to store output data
     output_file.open("..//output//clustered_data.txt");
@@ -933,12 +921,12 @@ void write_to_file(std::vector<std::pair<std::string, double>> table, int rows, 
     // Write the clusters' data into the file
     for(map_iterator = clusters.begin(); map_iterator != clusters.end(); ++map_iterator)
     {
-        output_file << "cluster_" << map_iterator->first << "\t[[";
-        for(string_vector_iterator = map_iterator->second.begin(); string_vector_iterator != map_iterator->second.end(); ++string_vector_iterator)
+        output_file << "cluster_" << map_iterator->first << "\t[";
+        for(std::vector<int>::size_type j = 0; j != map_iterator->second.size(); j++)
         {
-            output_file << *string_vector_iterator << "],[";
+            output_file << "[" << map_iterator->second[j].first << "," << map_iterator->second[j].second << "],";
         }
-        output_file << "-1,-1]]" << std::endl;
+        output_file << "]" << std::endl;
     }
     output_file.close();
 }
@@ -946,7 +934,7 @@ void write_to_file(std::vector<std::pair<std::string, double>> table, int rows, 
 
 int main()
 {
-    std::cout << ">>>    CLUSTERING WITH C++ PARALLEL PROGRAMMING    <<<" << std::endl;
+    std::cout << ">>>     CLUSTERING WITH C++ NATIVE PROGRAMMING     <<<" << std::endl;
 	std::cout << ">>>                  VERSION " << version_number << "                   <<<\n\n" << std::endl;
 
     // Parameter Initialization at the beginning of the program
@@ -960,7 +948,7 @@ int main()
     // Measuring time for generating data table begin
     auto time_begin_gen = std::chrono::high_resolution_clock::now();
     // Generate a 2D table with random floats, valued between 0 and a choosen number
-    std::vector<std::pair<std::string, double>> table = gen_2d_table(rows, columns, max_element);
+    std::vector<std::pair<std::pair<int,int>, double>> table = gen_2d_table(rows, columns, max_element);
     std::cout << "INFORMATIVE MESSAGE: The data table has been created!\n" << std::endl;
     // Random 2D matrix genereation runtime
     auto time_end_gen = std::chrono::high_resolution_clock::now() - time_begin_gen;
@@ -969,7 +957,7 @@ int main()
     //PrintElements(table, rows, columns);
 
     // Define the clustered map first
-    std::map<int, std::vector<std::string>> clusters;
+    std::map<int, std::vector<std::pair<int,int>>> clusters;
 
     // NATIVE BRUTEFORCE
     // Measuring time for bruteforce clustering begin
